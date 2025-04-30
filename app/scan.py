@@ -21,8 +21,20 @@ def scan_and_store(app):
     except subprocess.CalledProcessError as e:
         print(f"❌ Erro ao atualizar scripts do Nmap: {e}")
 
-    # Define a rede a escanear
-    net = ipaddress.ip_network("192.168.6.0/24")
+    # ---------- # Define a rede a escanear ----------
+
+    #usa um IP fixo para teste
+    #net = ipaddress.ip_network("192.168.6.0/24")
+   
+    # Obtém o IP da rede usando subprocess no macOS
+    try:
+        result = subprocess.run(["ipconfig", "getifaddr", "en0"], stdout=subprocess.PIPE, check=True, text=True)
+        ip_address = result.stdout.strip()
+        net = ipaddress.ip_network(f"{ip_address}/24", strict=False)
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Erro ao obter o IP da rede: {e}")
+        return
+    
     ip_list = [str(ip) for ip in net.hosts()]
     print(f"🔢 De: {ip_list[0]} até {ip_list[-1]}")
 
