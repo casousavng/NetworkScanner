@@ -4,31 +4,18 @@ import threading
 import webview
 import time
 import requests
-from run import app
+from run_tetse import app
 from app.extensions import socketio
+from app import create_app
 from screeninfo import get_monitors
 import os
-from db_init import init_db
+from app.db_init import init_db
 
-#orginal code
+app = create_app()
 
 def start_flask():
     print("🚀 A iniciar Flask...")
     socketio.run(app, host='127.0.0.1', port=5005, debug=False, use_reloader=False)
-
-''' -> Segunda opção
-def start_flask():
-    print("🚀 A iniciar Flask...")
-    with app.app_context():  # Garante que o contexto da app está ativo
-        socketio.run(app, host='127.0.0.1', port=5005, debug=False, use_reloader=False)
-'''
-
-'''
-def start_flask():
-    print("🚀 A iniciar Flask...")
-    app.run(host='127.0.0.1', port=5005, debug=False)     
-'''  
-
 
 def show_main_app(window):
     if not wait_for_server():
@@ -57,7 +44,6 @@ def show_main_app(window):
     print("🔁 A carregar interface principal...")
     window.load_url("http://127.0.0.1:5005")
 
-
 def wait_for_server(url="http://127.0.0.1:5005", timeout=15):
     for _ in range(timeout * 2):
         try:
@@ -68,7 +54,6 @@ def wait_for_server(url="http://127.0.0.1:5005", timeout=15):
             pass
         time.sleep(0.5)
     return False
-
 
 if __name__ == '__main__':
 
@@ -83,63 +68,12 @@ if __name__ == '__main__':
     flask_thread.daemon = True
     flask_thread.start()
 
-    splash_html = """
-    <html>
-    <head>
-        <style>
-            body {
-                margin: 0;
-                background-color: #1e1e1e;
-                color: white;
-                font-family: sans-serif;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-            }
+    # Load the splash HTML content from the templates folder
+    splash_html_path = os.path.join("templates", "splash.html")
+    with open(splash_html_path, "r", encoding="utf-8") as file:
+        splash_html = file.read()
 
-            .container {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                animation: fadeIn 1s ease-in-out;
-            }
-
-            .spinner {
-                border: 6px solid rgba(255, 255, 255, 0.2);
-                border-top: 6px solid white;
-                border-radius: 50%;
-                width: 60px;
-                height: 60px;
-                animation: spin 1s linear infinite;
-            }
-
-            .text {
-                margin-top: 20px;
-                text-align: center;
-                font-size: 1.2em;
-            }
-
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-
-            @keyframes fadeIn {
-                0% { opacity: 0; transform: scale(0.95); }
-                100% { opacity: 1; transform: scale(1); }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="spinner"></div>
-            <div class="text">A carregar aplicação...</div>
-        </div>
-    </body>
-    </html>
-    """
-
+    # Create the splash window with the loaded HTML content
     splash_window = webview.create_window(
         "A iniciar...",
         html=splash_html,
@@ -156,5 +90,4 @@ if __name__ == '__main__':
         easy_drag=True,
 
     )
-
     webview.start(func=show_main_app, args=(splash_window,), gui='cocoa')
