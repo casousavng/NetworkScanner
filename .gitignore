@@ -1,0 +1,9 @@
+# Ignorar o ficheiro .env
+.env
+
+# Ignorar o ficheiro rede.db dentro da pasta data
+data/rede.db
+
+**/*.db
+
+/TESTES/

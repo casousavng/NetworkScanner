@@ -1,0 +1,77 @@
+body {
+  display: flex;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden; /* Remove o scroll do body */
+}
+
+.sidebar {
+  width: 250px;
+  background: #f8f9fa;
+  padding: 1rem;
+  height: 100%;  /* Garante que a sidebar ocupe toda a altura da página */
+  overflow-y: auto; /* Permite o scroll apenas na sidebar */
+}
+
+.content {
+  flex: 1;
+  position: relative;
+  padding: 1rem;
+  overflow: hidden; /* Evita o scroll no conteúdo principal */
+}
+
+.detail-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 300px;
+  background: white;
+  border-left: 1px solid #ccc;
+  height: 100%;
+  overflow: auto;
+  display: none;
+  padding: 1rem;
+}
+
+    /* Estilo para o Spinner */
+    .loading-spinner {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 20px;
+      border-radius: 10px;
+      color: white;
+    }
+
+    .spinner {
+      border: 5px solid rgba(255, 255, 255, 0.3);
+      border-top: 5px solid white;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-spinner p {
+      margin-left: 15px;
+      font-size: 18px;
+      margin-bottom: 0;
+    }
+
+    /* Desativa links durante o scan */
+    .disabled-link {
+      pointer-events: none !important;
+      opacity: 0.5 !important;
+      cursor: not-allowed !important;
+    }

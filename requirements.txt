@@ -1,0 +1,13 @@
+Flask
+Flask-SocketIO
+Flask-Login
+Flask-Dotenv
+plotly
+requests
+networkx
+python-dotenv
+Jinja2
+python-nmap
+pywebview
+screeninfo
+numpy

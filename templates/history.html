@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block body %}
+<h3>Histórico de Scans</h3>
+<table class="table table-striped">
+  <thead><tr><th>ID</th><th>Timestamp</th></tr></thead>
+  <tbody>
+    {% for s in scans %}
+      <tr><td>{{ s.id }}</td><td>{{ s.ts }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

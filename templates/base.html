@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <title>Scanner de Rede</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+<body>
+  <div class="sidebar">
+    <h5>Menu</h5>
+    <ul class="nav flex-column">
+      <li class="nav-item"><a class="nav-link menu-link" href="{{ url_for('index') }}">Mapa</a></li>
+      <li class="nav-item"><a class="nav-link menu-link" href="{{ url_for('list_devices') }}">Dispositivos</a></li>
+      <li class="nav-item"><a class="nav-link menu-link" href="{{ url_for('history') }}">Histórico</a></li>
+      <li class="nav-item"><a class="nav-link menu-link" href="{{ url_for('do_scan') }}" id="startScanBtn">Novo Scan</a></li>
+      <li><hr></li>
+      <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></li>
+      <li class="nav-item">
+        <a class="nav-link" href="#" onclick="fecharApp()">Sair</a>
+      </li>
+    </li>
+      </li>
+    </ul>
+  </div>
+  <div class="content">
+    {% block body %}{% endblock %}
+    <div id="detail" class="detail-panel"></div>
+  </div>
+
+  <!-- Spinner de carregamento -->
+  <div id="loadingSpinner" class="loading-spinner" style="display:none;">
+    <div class="spinner"></div>
+    <p>Aguarde por favor...</p>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <script src="{{ url_for('static', filename='socket.io.js') }}"></script>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+
+  <script>
+    let isScanning = false;
+  
+    function showSpinner() {
+      document.getElementById('loadingSpinner').style.display = 'flex';
+    }
+  
+    function hideSpinner() {
+      document.getElementById('loadingSpinner').style.display = 'none';
+    }
+  
+    document.getElementById('startScanBtn').addEventListener('click', function(e) {
+      if (isScanning) return;
+  
+      e.preventDefault();
+  
+      const isOnHomePage = window.location.pathname === '/';
+  
+      if (!isOnHomePage) {
+        // Guarda a flag no localStorage para iniciar o scan ao chegar à página inicial
+        localStorage.setItem('startScanOnLoad', 'true');
+        window.location.href = '/';
+        return;
+      }
+  
+      iniciarScan();
+    });
+  
+    function iniciarScan() {
+      isScanning = true;
+      showSpinner();
+  
+      // Desativa todos os links do menu
+      document.querySelectorAll('.menu-link').forEach(link => {
+        link.classList.add('disabled-link');
+      });
+  
+      fetch('/scan')
+        .then(response => response.json())
+        .then(data => {
+          hideSpinner();
+          isScanning = false;
+  
+          document.querySelectorAll('.menu-link').forEach(link => {
+            link.classList.remove('disabled-link');
+          });
+  
+          window.location.href = '/';
+        })
+        .catch(error => {
+          hideSpinner();
+          isScanning = false;
+  
+          document.querySelectorAll('.menu-link').forEach(link => {
+            link.classList.remove('disabled-link');
+          });
+  
+          console.error('Erro ao iniciar o scan:', error);
+        });
+    }
+
+  // Função para fechar o aplicativo
+  // Envia uma requisição para o servidor para fechar o aplicativo
+  // e tenta fechar a janela webview
+  function fecharApp() {
+    fetch('/shutdown', { method: 'POST' })
+      .then(response => {
+        if (response.ok) {
+          window.close();  // Tenta fechar a janela WebView
+        } else {
+          console.error('Erro ao tentar fechar a aplicação');
+        }
+      });
+  }
+
+  function toggleFullScreen() {
+  const btn = document.getElementById('fullscreenBtn');
+  
+  // Se não está em tela cheia, entra em tela cheia
+  if (!document.fullscreenElement) {
+    enterFullScreen();
+    btn.innerText = '⛶ Sair da tela cheia';
+  } else {
+    // Se já está em tela cheia, sai de tela cheia
+    exitFullScreen();
+    btn.innerText = '⛶ Tela cheia';
+  }
+}
+  
+    // Verifica se deve iniciar scan automaticamente ao carregar a página inicial
+    window.addEventListener('load', () => {
+      const shouldStartScan = localStorage.getItem('startScanOnLoad') === 'true';
+      const isOnHomePage = window.location.pathname === '/';
+  
+      if (shouldStartScan && isOnHomePage) {
+        localStorage.removeItem('startScanOnLoad');
+        iniciarScan();
+      }
+    });
+  </script>
+</body>
+</html>

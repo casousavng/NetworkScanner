@@ -1,0 +1,74 @@
+{% extends "base.html" %} {% block body %}
+<h3>Mapa Interativo da Rede</h3>
+<div id="network-graph" style="height: 700px"></div>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<script>
+
+      const fig = {{ graphJSON | safe }};
+
+      Plotly.newPlot('network-graph', fig.data, fig.layout, {
+      displayModeBar: false, // <- remove a barra
+      staticPlot: false      // <- permite arrastar os nós
+    });
+
+      // Interação extra: clique nos nós
+      const graphDiv = document.getElementById('network-graph');
+      graphDiv.on('plotly_click', function(data) {
+        const ip = data.points[0].customdata;
+        if (ip) {
+          // Exemplo: carregar detalhes via AJAX ou mostrar painel
+          fetch(`/api/device/${ip}`)
+            .then(resp => resp.json())
+            .then(info => {
+              const d = document.getElementById('detail');
+              d.innerHTML = `
+              <button style="position: fixed; top: 10px; right: 10px; z-index: 1000;" onclick="document.getElementById('detail').style.display='none'">Fechar</button>
+              <h5 style="word-wrap: break-word;">${info.hostname}</h5>
+              <p><b>IP:</b> ${info.ip}</p>
+              <p><b>MAC:</b> ${info.mac}</p>
+              <p><b>Fabricante:</b> ${info.vendor}</p>
+              <p><b>Detetado a:</b> ${new Date(info.last_seen).toLocaleString('pt-PT')}</p>
+
+              ${info.ports && info.ports.length ? `
+                <p><b>Portas/Serviços:</b></p>
+                <div style="font-size: 90%; line-height: 1.4;">
+                  ${info.ports.map(p => {
+                    // Verifica o estado da porta
+                    const state = p.state || 'desconhecido';
+                    return `
+                      <div style="margin-bottom: 10px;">
+                        <b>Porta:</b> ${p.port}/${(p.protocol || 'tcp').toLowerCase()} <br>
+                        <b>Estado:</b> ${p.state} <br>
+                        <b>Serviço:</b> ${p.service || '-'} <br>
+                        <b>Versão:</b> ${p.version || '-'} <br>
+                        <b>Produto:</b> ${p.product || '-'}
+                        ${Array.isArray(p.cves) && p.cves.length ? `
+                          <br><b>CVEs:</b><br>
+                          ${p.cves.map(cve => `<div style="margin-left: 10px;"><b>${cve.id}</b>: ${cve.description}</div>`).join('')}
+                        ` : ''}
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              ` : '<p><i>Sem portas detetadas.</i></p>'}
+              ${info.vulns && info.vulns.length ? `
+                <p><b>Vulnerabilidades:</b></p>
+                <div style="font-size: 90%; line-height: 1.4;">
+                  ${info.vulns.map(v => {
+                    return `
+                      <div style="margin-bottom: 10px;">
+                        <b>${v.id}</b>: ${v.description}
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              ` : '<p><i>Sem vulnerabilidades detetadas.</i></p>'}
+  `;
+              d.style.display = 'block';
+            });
+        }
+      });
+</script>
+{% endblock %}

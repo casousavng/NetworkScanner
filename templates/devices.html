@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block body %}
+<h3>Dispositivos</h3>
+<div class="d-flex mb-2">
+  <input id="search" placeholder="Pesquisar..." class="form-control me-2">
+  <a href="{{ url_for('export_csv_devices') }}" class="btn btn-outline-secondary">Exportar CSV</a>
+</div>
+<table id="tbl-dev" class="table table-striped">
+  <thead><tr>
+    <th title="Endereço IP do dispositivo">IP</th>
+    <th title="Nome do dispositivo">Hostname</th>
+    <th title="Endereço MAC do dispositivo">MAC</th>
+    <th title="Fabricante do dispositivo (se disponível)">Vendor</th>
+    <th title="Última vez que o dispositivo foi detetado">Último Scan</th>
+  </tr></thead>
+  <tbody>
+    {% for d in devices %}
+      <tr>
+        <td>{{ d.ip }}</td><td>{{ d.hostname }}</td>
+        <td>{{ d.mac }}</td><td>{{ d.vendor }}</td><td>{{ d.last_seen }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<nav><ul class="pagination" id="pagin"></ul></nav>
+{% endblock %}
+
+<script>
+// Implementação do filtro de busca e paginação vai aqui
+</script>
