@@ -4,7 +4,6 @@ import threading
 import webview
 import time
 import requests
-from run_tetse import app
 from app.extensions import socketio
 from app import create_app
 from screeninfo import get_monitors
