@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 {% block body %}
-<div class="container">
-  <form method="post" class="mt-5">
-    <h2>Login</h2>
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+  <form method="post" class="w-100" style="max-width: 350px;">
+    <h2 class="text-center mb-4">Login</h2>
     <div class="mb-3">
-      <input name="username" placeholder="Utilizador" class="form-control">
+      <input name="username" maxlength="40" placeholder="Utilizador" class="form-control" required>
     </div>
     <div class="mb-3">
-      <input name="password" placeholder="Senha" type="password" class="form-control">
+      <input name="password" maxlength="40" placeholder="Senha" type="password" class="form-control" required>
     </div>
-    <button class="btn btn-primary">Entrar</button>
+    <button class="btn btn-primary w-100">Entrar</button>
   </form>
 </div>
 {% endblock %}

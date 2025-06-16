@@ -1,6 +1,6 @@
 import os, sqlite3
 
-DB_PATH = os.path.join("data", "rede.db")
+DB_PATH = os.path.join("data", "rede.db")  # <- nome fixo
 SCHEMA  = "app/schema.sql"
 
 def init_db():

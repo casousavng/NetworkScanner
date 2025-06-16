@@ -7,10 +7,12 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from .db import get_db
 from .extensions import socketio
+import re
 
 
-def scan_and_store(app):
+def scan_and_store(active_ips):
     start_time = time.time()
+
     print("⚡ Iniciando varredura")
 
     # Atualiza os scripts do Nmap
@@ -21,43 +23,11 @@ def scan_and_store(app):
     except subprocess.CalledProcessError as e:
         print(f"❌ Erro ao atualizar scripts do Nmap: {e}")
 
-    # ---------- # Define a rede a escanear ----------
+    #active_ips = ["192.168.1.109"]  # IPs alvo para teste caseiro com a maquina vulnerable
 
-    #usa um IP fixo para teste
-    #net = ipaddress.ip_network("192.168.6.0/24")
-   
-    # Obtém o IP da rede usando subprocess no macOS
-    try:
-        result = subprocess.run(["ipconfig", "getifaddr", "en0"], stdout=subprocess.PIPE, check=True, text=True)
-        ip_address = result.stdout.strip()
-        net = ipaddress.ip_network(f"{ip_address}/24", strict=False)
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Erro ao obter o IP da rede: {e}")
-        return
-    
-    ip_list = [str(ip) for ip in net.hosts()]
-    print(f"🔢 De: {ip_list[0]} até {ip_list[-1]}")
-
-    # ---------- Fase 1: Descoberta de Hosts Ativos ----------
-    def _ping_scan():
-        print("🔍 Executando ping scan...")
-        args = ["nmap", "-sn", "-oX", "-", str(net)]
-        res = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=True)
-        root = ET.fromstring(res.stdout)
-        active_ips = []
-        for host in root.findall("host"):
-            addr = host.find("address[@addrtype='ipv4']")
-            if addr is not None:
-                active_ips.append(addr.attrib["addr"])
-        return active_ips
-
-    active_ips = _ping_scan()
-    print(f"✅ IPs ativos encontrados: {active_ips}")
-
-    # ---------- Fase 2: Varredura de portas com script vuln ----------
     def _scan_ip(ip):
         print(f"🔬 Escaneando IP: {ip}")
-        args = ["nmap", "-sS", "-sV", "--script", "vuln", "-T4", "-p", "1-1000", "-oX", "-", ip]
+        args = ["nmap", "-sS", "-sV", "--script", "vuln", "-T4", "-p", "1-100", "-oX", "-", ip] # Ajuste os parâmetros conforme necessário 1-100 para portas específicas
         try:
             res = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
             return ET.fromstring(res.stdout)
@@ -67,13 +37,15 @@ def scan_and_store(app):
             return None
 
     with ThreadPoolExecutor(max_workers=10) as exe:
-        roots = list(exe.map(_scan_ip, active_ips))
-        roots = [r for r in roots if r is not None]
+        roots = [r for r in exe.map(_scan_ip, active_ips) if r is not None]
 
     db = get_db()
     cur = db.cursor()
+
+    # Cria novo scan
     cur.execute("INSERT INTO scans DEFAULT VALUES")
-    print("📥 Novo registo criado em 'scans'")
+    scan_id = cur.lastrowid
+    print(f"📥 Novo registo criado em 'scans' (ID: {scan_id})")
 
     def get_vendor(mac):
         if not mac:
@@ -85,7 +57,8 @@ def scan_and_store(app):
             print(f"Erro vendor {mac}: {e}")
             return ""
 
-    total_ips = 0
+    cves_detectados = []
+
     for root in roots:
         for host in root.findall("host"):
             addr_tag = host.find("address[@addrtype='ipv4']")
@@ -93,7 +66,6 @@ def scan_and_store(app):
                 continue
 
             ip = addr_tag.attrib["addr"]
-            total_ips += 1
             print(f"➡️ IP detectado: {ip}")
 
             mac_tag = host.find("address[@addrtype='mac']")
@@ -102,18 +74,18 @@ def scan_and_store(app):
             hostname = hn.attrib["name"] if hn is not None else ip
             vendor = get_vendor(mac)
 
-            # Guardar device
+            # Insere ou atualiza device
             cur.execute("""
-              INSERT INTO devices(ip,hostname,mac,vendor)
-              VALUES(?,?,?,?)
+              INSERT INTO devices(ip, hostname, mac, vendor, scan_id)
+              VALUES (?, ?, ?, ?, ?)
               ON CONFLICT(ip) DO UPDATE SET
-                hostname=excluded.hostname,
-                mac=excluded.mac,
-                vendor=excluded.vendor,
-                last_seen=CURRENT_TIMESTAMP
-            """, (ip, hostname, mac, vendor))
+                  hostname = excluded.hostname,
+                  mac = excluded.mac,
+                  vendor = excluded.vendor,
+                  last_seen = CURRENT_TIMESTAMP,
+                  scan_id = excluded.scan_id
+            """, (ip, hostname, mac, vendor, scan_id))
 
-            # Portas e serviços
             for p in host.findall(".//port"):
                 portid = int(p.attrib["portid"])
                 protocol = p.attrib.get("protocol", "tcp")
@@ -130,49 +102,125 @@ def scan_and_store(app):
 
                 print(f"  💡 Porta {portid}/{protocol} ({state}): {name} {ver} (Produto: {product})")
 
+                # Insere ou atualiza port
                 cur.execute("""
-                INSERT INTO ports(ip, port, protocol, state, service, version, product)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO ports(ip, port, protocol, state, service, version, product, scan_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(ip, port, protocol) DO UPDATE SET
                     state = excluded.state,
                     service = excluded.service,
                     version = excluded.version,
-                    product = excluded.product
-                """, (ip, portid, protocol, state, name, ver, product))
+                    product = excluded.product,
+                    scan_id = excluded.scan_id
+                """, (ip, portid, protocol, state, name, ver, product, scan_id))
 
-                cur.execute("SELECT id FROM ports WHERE ip=? AND port=? AND protocol=?", (ip, portid, protocol))
+                cur.execute("SELECT id FROM ports WHERE ip = ? AND port = ? AND protocol = ?", (ip, portid, protocol))
                 pid_row = cur.fetchone()
                 if not pid_row:
-                    print(f"⚠️ Port ID não encontrado para {ip}:{portid}/{protocol}")
                     continue
 
                 pid = pid_row[0]
 
-                # Extrair CVEs do script "vuln"
-                script = p.find("script[@id='vuln']")
-                if script is not None:
-                    found_cves = 0
+                for script in p.findall("script"):
+                    script_id = script.attrib.get("id", "unknown")
+                    output = script.attrib.get("output", "").strip()
+                    if not output:
+                        continue
+
+                    print(f"    🧪 Script: {script_id}")
+                    print(f"    📄 Output: {output}")
+
+                    cur.execute("""
+                        INSERT INTO vulnerabilities (port_id, script_id, description)
+                        VALUES (?, ?, ?)
+                        ON CONFLICT(port_id, script_id) DO NOTHING
+                    """, (pid, script_id, output))
+
                     for elem in script.findall("elem"):
                         cve_text = elem.text or ""
                         if "CVE" in cve_text:
                             print(f"    🛡️ CVE detectado: {cve_text}")
-                            found_cves += 1
+
                             cur.execute("""
                                 INSERT INTO cves(port_id, cve_id, description)
                                 VALUES (?, ?, ?)
                                 ON CONFLICT(port_id, cve_id) DO NOTHING
-                            """, (pid, cve_text, "Detectado por Nmap (vuln script)"))
-                    if found_cves == 0:
-                        print("    ⚠️ Script 'vuln' executado mas sem CVEs detectados.")
-                else:
-                    print("    ℹ️ Script 'vuln' não executado ou sem resultados.")
+                            """, (pid, cve_text, f"Detectado pelo script {script_id}"))
 
+                            cur.execute("""
+                                INSERT INTO vulnerabilities (port_id, cve_id, script_id, description)
+                                VALUES (?, ?, ?, ?)
+                                ON CONFLICT(port_id, cve_id) DO NOTHING
+                            """, (pid, cve_text, script_id, f"Detectado pelo script {script_id}"))
+
+                            cves_detectados.append((pid, cve_text))
+
+    def extract_cves_from_description():
+        cur.execute("SELECT port_id, description FROM vulnerabilities WHERE description LIKE '%CVE%'")
+        rows = cur.fetchall()
+        # Regex para CVE e CVSS (ignora o link)
+        pattern = re.compile(
+            r'(CVE-\d{4}-\d+)[\t ]+([0-9.]+)',
+            re.IGNORECASE
+        )
+
+        for port_id, description in rows:
+            if not description:
+                continue
+            for match in pattern.finditer(description):
+                cve_id = match.group(1)
+                cvss = match.group(2)
+                desc = "Detectado na descrição da vulnerabilidade"
+                link = f"https://vulners.com/cve/{cve_id}"
+                cur.execute("""
+                    INSERT INTO cves(port_id, cve_id, description, cvss, reference)
+                    VALUES (?, ?, ?, ?, ?)
+                    ON CONFLICT(port_id, cve_id) DO UPDATE SET
+                        cvss = excluded.cvss,
+                        reference = excluded.reference,
+                        description = excluded.description
+                """, (
+                    port_id,
+                    cve_id,
+                    desc,
+                    cvss,
+                    link
+                ))
+
+    def extract_ebds_from_description():
+        cur.execute("SELECT id, description FROM vulnerabilities WHERE description LIKE '%EDB-ID:%'")
+        rows = cur.fetchall()
+
+        pattern = re.compile(
+            r'EDB-ID:(\d+)[\t ]+([0-9.]+)[\t ]+(https?://[^\s]+)',
+            re.IGNORECASE
+        )
+
+        for vuln_id, description in rows:
+            if not description:
+                continue
+            for match in pattern.finditer(description):
+                edb_id = f"EDB-ID:{match.group(1)}"
+                severity = match.group(2)
+                url = match.group(3)
+
+                cur.execute("""
+                    INSERT INTO edbs(vulnerability_id, ebd_id, severity, ebds, reference_url)
+                    VALUES (?, ?, ?, ?, ?)
+                    ON CONFLICT(vulnerability_id, ebd_id) DO UPDATE SET
+                        severity = excluded.severity,
+                        ebds = excluded.ebds,
+                        reference_url = excluded.reference_url
+                """, (
+                    vuln_id,
+                    edb_id,
+                    severity,
+                    "Detectado na descrição da vulnerabilidade",
+                    url
+                ))
+
+    extract_cves_from_description()
+    extract_ebds_from_description()
     db.commit()
-    print(f"✅ Varredura concluída. {total_ips} IPs com serviços detectados.")
-
-    # Tempo total
-    elapsed_time = time.time() - start_time
-    minutes, seconds = divmod(elapsed_time, 60)
-    print(f"⏱️ Tempo total da varredura: {int(minutes)} minutos e {int(seconds)} segundos")
-
-    socketio.emit('new_scan', {'message': 'Novo scan concluído.'}, to=None)
+    elapsed = round(time.time() - start_time, 2)
+    print(f"✅ Varredura finalizada em {elapsed} segundos")

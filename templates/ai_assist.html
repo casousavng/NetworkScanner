@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block body %}
+
+
+  <h3>Assistente de Análise de IP com IA</h3>
+  <p>
+    Utilize este assistente para analisar dispositivos na rede e identificar potenciais vulnerabilidades.<br>
+    Selecione um IP abaixo e clique em "Analisar" para obter recomendações de segurança.
+  </p>
+  <form method="POST" class="row g-2 align-items-end mb-3">
+    <div class="col-auto">
+      <label for="ip" class="form-label mb-2">Seleciona um IP:</label>
+      <select class="form-select shadow" id="ip" name="ip" required >
+        <option value="">-- Escolhe um IP --</option>
+        {% for ip in ips %}
+          <option value="{{ ip }}" {% if ip == ip_escolhido %}selected{% endif %}>{{ ip }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary">Analisar</button>
+    </div>
+  </form>
+
+
+
+
+{% if resposta_ia or resposta %}
+  <div class="mt-4">
+    <div class="card bg-light shadow">
+      <div class="card-header bg-light">
+        <h5 class="mb-0">Resposta da IA Gemini</h5>
+      </div>
+      <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+        <div class="resposta-ia" style="font-family: 'Segoe UI', sans-serif;">
+          {{ resposta_ia | safe }}
+          {{ resposta | safe }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+  <style>
+    .resposta-ia strong {
+        color: #fd0d0d;
+    }
+
+    .resposta-ia ol, .resposta-ia ul {
+        padding-left: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .resposta-ia li {
+        margin-bottom: 0.5rem;
+    }
+
+    .resposta-ia br {
+        margin-bottom: 0.5rem;
+    }
+
+    .resposta-ia a {
+        color: #198754;
+        text-decoration: none;
+    }
+
+    .resposta-ia a:hover {
+        text-decoration: underline;
+    }
+  </style>
+{% endif %}
+
+{% endblock %}

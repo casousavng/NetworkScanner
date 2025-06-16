@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container mt-4">
+  <h3>Scan em andamento...</h3>
+  <div id="loadingSpinner" style="display:flex; align-items:center;">
+    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> A processar...
+  </div>
+  <p id="statusText">Aguarde enquanto o scan é concluído.</p>
+</div>
+
+<script>
+  function checkStatus() {
+    fetch('{{ url_for("scan_status") }}')
+      .then(response => response.json())
+      .then(data => {
+        if (!data.running) {
+          document.getElementById('statusText').innerText = "Scan concluído!";
+          document.getElementById('loadingSpinner').style.display = 'none';
+          // Opcional: redirecionar para home ou página de resultados depois de 2 segundos
+          setTimeout(() => window.location.href = "{{ url_for('index') }}", 2000);
+        } else {
+          setTimeout(checkStatus, 2000);  // Checar novamente em 2s
+        }
+      })
+      .catch(err => {
+        console.error('Erro ao consultar status:', err);
+        setTimeout(checkStatus, 5000);  // Tentar novamente em 5s se falhar
+      });
+  }
+
+  checkStatus();
+</script>
+{% endblock %}

@@ -11,4 +11,4 @@ python-nmap
 pywebview
 screeninfo
 numpy
-
+google-generativeai
