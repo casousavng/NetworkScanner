@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block body %}
+<div class="container mt-4">
 <h3>Mapa Interativo da Rede</h3>
 <div id="network-graph" style="height: 700px"></div>
 
@@ -30,7 +31,7 @@
             <p><b>Detetado a:</b> ${new Date(info.last_seen).toLocaleString('pt-PT')}</p>
 
             ${info.ports && info.ports.length ? `
-              <p><b>Portas/Serviços:</b></p>
+              <hr><p><b>Portas/Serviços:</b></p>
               <div style="font-size: 90%; line-height: 1.4;">
                 ${info.ports.map(p => {
                   const state = p.state || 'desconhecido';
@@ -40,27 +41,34 @@
                       <b>Estado:</b> ${state} <br>
                       <b>Serviço:</b> ${p.service || '-'} <br>
                       <b>Versão:</b> ${p.version || '-'} <br>
-                      <b>Produto:</b> ${p.product || '-'}
                       ${Array.isArray(p.cves) && p.cves.length ? `
-                        <br><b>Vulnerabilidades:</b><br>
-                        ${p.cves.map(cve => `
-                          <div style="margin-left: 10px;">
-                            ${cve.id ? `<b><a href="${cve.reference}" target="_blank" rel="noopener noreferrer">${cve.id}</a></b>` : `<b>Sem CVE</b>`}
-                            ${cve.cvss ? `<span style="color: #d9534f;">(CVSS3: ${cve.cvss})</span>` : ''}
-                            <a href="${cve.reference}" target="_blank" rel="noopener noreferrer"></a><br>
-                            ${cve.script_id ? `<b>Script:</b> ${cve.script_id}<br>` : ''}
-                          </div>
-                        `).join('')}
+                      <b>Vulnerabilidades:</b>
+                        ${p.cves.length === 0 ? '<i>Sem CVEs detetadas.</i>' : ''}
+                        ${p.cves.length > 0 ? `
+                        ${p.cves.length} <br>
+                        ` : ''}
+                      <div style="margin-left: 10px;">
+                      <b>CVE's:</b></div> 
+                      ${p.cves.map(cve => `
+                        <div style="margin-left: 10px;">
+                        ${cve.id ? `<b><a href="${cve.reference}" target="_blank" rel="noopener noreferrer">${cve.id}</a></b>` : `<b>Sem CVE</b>`}
+                        ${cve.cvss ? `<span style="color: #d9534f;">(CVSS3: ${cve.cvss})</span>` : ''}
+                        <a href="${cve.reference}" target="_blank" rel="noopener noreferrer"></a><br>
+                        </div>
+                      `).join('')}
                       ` : ''}
                       ${Array.isArray(p.edb) && p.edb.length ? `
-                        <br><b>Exploit-DB:</b><br>
-                        ${p.edb.map(edb => `
-                          <div style="margin-left: 10px;">
-                            <a href="https://vulners.com/exploitdb/${edb}" target="_blank" rel="noopener noreferrer">${edb}</a>
-                          </div>
-                        `).join('')}
+                      <div style="margin-left: 10px;">
+                      <b>Exploit-DB:</b></div> 
+                      ${p.edb.map(edb => `
+                        <div style="margin-left: 10px;">
+                        <b><a href="${edb.reference}" target="_blank" rel="noopener noreferrer">${edb.id}</a></b>
+                        ${edb.severity ? `<span style="color: #d9534f;">(CVSS3: ${edb.severity})</span>` : ''}
+                        </div>
+                      `).join('')}
                       ` : ''}
                     </div>
+                    <hr style="border-top: 2px dotted #bbb;">
                   `;
                 }).join('')}
               </div>

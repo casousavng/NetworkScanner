@@ -17,6 +17,8 @@ from flask import request
 import os
 import signal
 from datetime import datetime
+import netifaces
+import ipaddress
 
 
 def init_app(app):
@@ -31,20 +33,34 @@ def init_app(app):
     @app.route('/scan', methods=['GET', 'POST'])
     @login_required
     def do_scan():
+        print("Iniciando NOVO scan...")
         if request.method == 'POST':
-            scan_type = request.form.get("scan_type")  # 'all' ou 'specific'
+            scan_type = request.form.get("scan_type")  # 'all' ou 'specific' ou 'range'
+            print(f"Scan Type: {scan_type}")
             ip_range = request.form.get("ip_range", "").strip()
 
             # Definir intervalo de IP com base na escolha
             if scan_type == "all":
-                ip_range = "192.168.1.1/24"  # Scan completo
+                # Obter a rede local automaticamente
+                iface = netifaces.gateways()['default'][netifaces.AF_INET][1]
+                net = netifaces.ifaddresses(iface)[netifaces.AF_INET][0]
+                ip = net['addr']
+                mask = net['netmask']
+                # Calcular o CIDR
+                network = ipaddress.IPv4Network(f"{ip}/{mask}", strict=False)
+                ip_range = str(network)
             elif scan_type == "specific":
                 if not ip_range:
                     return render_template("new_scan.html", error="Por favor, insira um IP válido.")
+            elif scan_type == "range":
+                ip_start = request.form.get("ip_start", "").strip()
+                ip_end = request.form.get("ip_end", "").strip()
+                ip_range = ip_start + "-" + ip_end.split('.')[-1]
             else:
                 return render_template("new_scan.html", error="Opção inválida de scan.")
             
             # Chamar o scan com o IP ou range definido
+            print(f"IP Range para scan: {ip_range}")
             scan_and_store([ip_range])  # Passa como lista para a função
 
             return redirect(url_for('index'))
@@ -103,10 +119,21 @@ def init_app(app):
             edb_list = []
             if vuln_ids:
                 cur.execute(
-                    f"SELECT ebd_id FROM edbs WHERE vulnerability_id IN ({','.join(['?']*len(vuln_ids))}) AND ebd_id IS NOT NULL",
+                    f"""
+                    SELECT ebd_id, reference_url, severity
+                    FROM edbs
+                    WHERE vulnerability_id IN ({','.join(['?']*len(vuln_ids))}) AND ebd_id IS NOT NULL
+                    """,
                     vuln_ids
                 )
-                edb_list = [row[0] for row in cur.fetchall()]
+                edb_list = [
+                    {
+                        "id": row[0],
+                        "reference": row[1],
+                        "severity": row[2]  # ou None, se não existir
+                    }
+                    for row in cur.fetchall()
+                ]
 
             ports.append({
                 "port": port,
@@ -243,3 +270,17 @@ def init_app(app):
     def ws_connect():
         print("WS client conectado")
 
+    @app.route('/api/edb-info')
+    @login_required
+    def edb_info():
+        db = get_db()
+        cur = db.cursor()
+        cur.execute("""
+            SELECT d.ip, p.port, v.id AS vuln_id, e.ebd_id, e.reference_url
+            FROM devices d
+            JOIN ports p ON p.ip = d.ip
+            JOIN vulnerabilities v ON v.port_id = p.id
+            JOIN edbs e ON e.vulnerability_id = v.id;
+        """)
+        rows = cur.fetchall()
+        return jsonify([dict(row) for row in rows])

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block body %}
+<div class="container mt-4">
   <h3>Novo Scan</h3>
   <p>Escolha o tipo de scan que pretende realizar:</p>
 
@@ -14,11 +15,24 @@
         <input class="form-check-input" type="radio" name="scan_type" id="scanSpecific" value="specific">
         <label class="form-check-label" for="scanSpecific">IP Específico</label>
       </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="scan_type" id="scanRange" value="range">
+        <label class="form-check-label" for="scanRange">Intervalo de IPs</label>
+      </div>
     </div>
 
     <div class="form-group mb-3" id="ipInputGroup" style="display: none;">
       <label for="ip_range">Endereço IP:</label>
       <input type="text" class="form-control" id="ip_range" name="ip_range" placeholder="Ex: 192.168.1.10">
+    </div>
+
+    <div class="form-group mb-3" id="ipRangeGroup" style="display: none;">
+      <label for="ip_start">Intervalo de IPs:</label>
+      <div class="input-group">
+        <input type="text" class="form-control" id="ip_start" name="ip_start" placeholder="IP inicial (Ex: 192.168.1.10)">
+        <span class="input-group-text">até</span>
+        <input type="text" class="form-control" id="ip_end" name="ip_end" placeholder="IP final (Ex: 192.168.1.20)">
+      </div>
     </div>
 
     <button type="submit" class="btn btn-primary" id="submitBtn">Iniciar Scan</button>
@@ -32,7 +46,10 @@
 <script>
   const scanAllRadio = document.getElementById('scanAll');
   const scanSpecificRadio = document.getElementById('scanSpecific');
+  const scanRangeRadio = document.getElementById('scanRange');
   const ipInputGroup = document.getElementById('ipInputGroup');
+  const ipRangeGroup = document.getElementById('ipRangeGroup');
+  const ipInput = document.getElementById('ip_range');
   const form = document.getElementById('scanForm');
   const submitBtn = document.getElementById('submitBtn');
   const loadingSpinner = document.getElementById('loadingSpinner');
@@ -40,10 +57,17 @@
   // Mostra/oculta input IP conforme opção
   scanAllRadio.addEventListener('change', () => {
     ipInputGroup.style.display = 'none';
+    ipRangeGroup.style.display = 'none';
   });
 
   scanSpecificRadio.addEventListener('change', () => {
     ipInputGroup.style.display = 'block';
+    ipRangeGroup.style.display = 'none';
+  });
+
+  scanRangeRadio.addEventListener('change', () => {
+    ipInputGroup.style.display = 'none';
+    ipRangeGroup.style.display = 'block';
   });
 
   // Ao carregar a página, garante estado inicial

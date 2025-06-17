@@ -46,9 +46,14 @@ def build_network_data():
     for u, v in G.edges():
         x0, y0 = pos[u]
         x1, y1 = pos[v]
+        # Se um dos nós for o router, aplica linha tracejada
+        if G.nodes[u]["type"] == "router" or G.nodes[v]["type"] == "router":
+            line_style = dict(width=1, color='gray', dash='dot')  # 'dot', 'dash', 'dashdot'
+        else:
+            line_style = dict(width=1, color='gray')
         edge_traces.append(go.Scatter(
             x=[x0, x1], y=[y0, y1], mode='lines',
-            hoverinfo='none', line=dict(width=1, color='gray'),
+            hoverinfo='none', line=line_style,
             showlegend=False
         ))
 
@@ -63,14 +68,14 @@ def build_network_data():
         node_custom.append(n)
 
         if G.nodes[n]["type"] == "router":
-            node_colors.append('#888888')  # Cinzento para o router
+            node_colors.append("#0037FF")  # Azul para o router
             node_sizes.append(50)          # Tamanho fixo para o router
         else:
             open_ports = open_ports_by_ip.get(n, 0)
             vuln_count = vuln_by_ip.get(n, 0)
 
             if open_ports == 0 and vuln_count == 0:
-                node_colors.append('#00cc00')  # verde sólido
+                node_colors.append("#00cc00")  # verde sólido
             elif open_ports <= 5 and vuln_count == 0:
                 node_colors.append('#ffcc00')  # amarelo sólido
             else:
@@ -83,6 +88,10 @@ def build_network_data():
                 normalized_size = MIN_SIZE + (MAX_SIZE - MIN_SIZE) * (capped_vuln / MAX_VULN)
                 size = 2 * round(normalized_size / 2)
 
+            min_size = 20
+            max_size = 45
+            max_ports = 10
+            size = min_size + (max_size - min_size) * min(open_ports, max_ports) / max_ports
             node_sizes.append(size)
 
     node_trace = go.Scatter(
