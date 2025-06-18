@@ -5,7 +5,6 @@ CREATE TABLE cves (
     description TEXT,
     cvss REAL,
     reference TEXT,
-    recommendation TEXT,
     UNIQUE (port_id, cve_id),
     FOREIGN KEY (port_id) REFERENCES ports (id)
 );

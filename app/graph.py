@@ -2,15 +2,23 @@ import networkx as nx
 import plotly.graph_objs as go
 from .db import get_db
 from flask import current_app
+from .scan import get_default_gateway
 
 def build_network_data():
+
+    router = get_default_gateway()
+    print(f"IP do router: {router}")
+
     db = get_db()
     cur = db.cursor()
     cur.execute("SELECT ip, hostname, vendor FROM devices")
     rows = cur.fetchall()
 
     G = nx.Graph()
-    router = current_app.config["ROUTER_IP"]
+    #router = current_app.config["ROUTER_IP"]
+
+    
+
     G.add_node(router, label="Router", type="router")
     for r in rows:
         ip, host, vendor = r["ip"], r["hostname"], r["vendor"]
@@ -28,6 +36,15 @@ def build_network_data():
     """)
     open_ports_by_ip = {row[0]: row[1] for row in cur.fetchall()}
 
+    cur.execute("""
+        SELECT ip, COUNT(*) as filtered_ports
+        FROM ports
+        WHERE state='filtered'
+        GROUP BY ip
+    """)
+    filtered_ports_by_ip = {row[0]: row[1] for row in cur.fetchall()}
+    open_ports_by_ip = {row[0]: row[1] for row in cur.fetchall()}
+
     # Obter número de vulnerabilidades por IP
     cur.execute("""
         SELECT p.ip, COUNT(v.id) as vuln_count
@@ -36,6 +53,15 @@ def build_network_data():
         GROUP BY p.ip
     """)
     vuln_by_ip = {row[0]: row[1] for row in cur.fetchall()}
+
+    # Obter a gravidade máxima das vulnerabilidades por IP
+    cur.execute("""
+        SELECT p.ip, MAX(v.cvss_score) as max_cvss
+        FROM ports p
+        LEFT JOIN vulnerabilities v ON v.port_id = p.id
+        GROUP BY p.ip
+    """)
+    max_cvss_by_ip = {row[0]: row[1] for row in cur.fetchall()}
 
     MIN_SIZE = 20
     MAX_SIZE = 45
@@ -72,14 +98,21 @@ def build_network_data():
             node_sizes.append(50)          # Tamanho fixo para o router
         else:
             open_ports = open_ports_by_ip.get(n, 0)
+            filtered_ports = filtered_ports_by_ip.get(n, 0)
             vuln_count = vuln_by_ip.get(n, 0)
+            max_cvss = max_cvss_by_ip.get(n, 0)
 
-            if open_ports == 0 and vuln_count == 0:
-                node_colors.append("#00cc00")  # verde sólido
-            elif open_ports <= 5 and vuln_count == 0:
-                node_colors.append('#ffcc00')  # amarelo sólido
-            else:
-                node_colors.append('#cc0000')  # vermelho sólido
+            safe_cvss = max_cvss if max_cvss is not None else 0
+
+            match True:
+                case _ if vuln_count >= 1 and safe_cvss >= 7:
+                    node_colors.append("#ff0000")  # vermelho sólido
+                case _ if vuln_count >= 1:
+                    node_colors.append("#ffb300")  # laranja sólido
+                case _ if open_ports > 0 or filtered_ports > 0:
+                    node_colors.append("#fff700")  # amarelo sólido
+                case _:
+                    node_colors.append("#00cc00")  # verde sólido
 
             if vuln_count == 0:
                 size = MIN_SIZE

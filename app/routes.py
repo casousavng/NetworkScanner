@@ -33,10 +33,8 @@ def init_app(app):
     @app.route('/scan', methods=['GET', 'POST'])
     @login_required
     def do_scan():
-        print("Iniciando NOVO scan...")
         if request.method == 'POST':
             scan_type = request.form.get("scan_type")  # 'all' ou 'specific' ou 'range'
-            print(f"Scan Type: {scan_type}")
             ip_range = request.form.get("ip_range", "").strip()
 
             # Definir intervalo de IP com base na escolha
@@ -59,13 +57,19 @@ def init_app(app):
             else:
                 return render_template("new_scan.html", error="Opção inválida de scan.")
             
+            port_range = request.form.get("port_range", "").strip()
+            if port_range == "":
+                port_range = "1-65535"
+            
+            redirect(url_for('scan_started'))
             # Chamar o scan com o IP ou range definido
             print(f"IP Range para scan: {ip_range}")
-            scan_and_store([ip_range])  # Passa como lista para a função
+            scan_and_store([ip_range], port_range)  # Passa como lista para a função
 
-            return redirect(url_for('index'))
+            #return redirect(url_for('index'))
 
-        return render_template('new_scan.html')
+
+        return redirect(url_for('index'))  # Redireciona para a página inicial após o scan
 
     @app.route('/')
     @login_required
@@ -73,6 +77,12 @@ def init_app(app):
         fig_data = build_network_data()
         graphJSON = json.dumps(fig_data, cls=plotly.utils.PlotlyJSONEncoder)
         return render_template('index.html', graphJSON=graphJSON)
+    
+    @app.route('/scan_started')
+    @login_required
+    def scan_started():
+        # Aqui podes renderizar uma página de "Scan iniciado" ou redirecionar para o index
+        return render_template('scan_started.html')
     
 
     @app.route('/api/device/<ip>')
@@ -91,13 +101,13 @@ def init_app(app):
 
         # Buscar portas + info de vulnerabilidades associadas
         cur.execute("""
-            SELECT id, port, service, version, state
+            SELECT id, port, service, product, version, state
             FROM ports
             WHERE ip=?
         """, (ip,))
         
         ports = []
-        for pid, port, svc, ver, state in cur.fetchall():
+        for pid, port, svc, prod, ver, state in cur.fetchall():
             # Buscar CVEs associados à porta
             cur.execute("""
                 SELECT cve_id, description, cvss, reference
@@ -138,6 +148,7 @@ def init_app(app):
             ports.append({
                 "port": port,
                 "service": svc,
+                "product": prod,
                 "version": ver,
                 "state": state,
                 "cves": cves,
@@ -161,9 +172,16 @@ def init_app(app):
         db = get_db()
         cur = db.cursor()
 
-        # Obter todos os IPs detetados
-        cur.execute("SELECT ip FROM devices ORDER BY last_seen DESC")
-        ips = [row['ip'] for row in cur.fetchall()]
+        # Obter todos os dispositivos
+        cur.execute("SELECT ip, mac, hostname FROM devices ORDER BY last_seen DESC")
+        devices = [ (row['ip'], row['mac'], row['hostname']) for row in cur.fetchall() ]
+
+        # Vai buscar todos os IPs com pelo menos uma porta aberta
+        cur.execute("SELECT DISTINCT ip FROM ports WHERE state='open'")
+        ips_com_portas_abertas = set(row['ip'] for row in cur.fetchall())
+
+        # Só passa para o template os dispositivos com portas abertas
+        ips = [ (ip, mac, hostname) for ip, mac, hostname in devices if ip in ips_com_portas_abertas ]
 
         resposta = ""
         resposta_ia = ""
@@ -211,11 +229,6 @@ def init_app(app):
             resposta=resposta,
             resposta_ia=resposta_ia
         )
-  
-    @app.route('/settings')
-    @login_required
-    def settings():
-        return render_template('settings.html')
     
     @app.route('/new_scan')
     @login_required
@@ -243,6 +256,8 @@ def init_app(app):
         db = get_db(); cur = db.cursor()
         cur.execute("SELECT * FROM scans ORDER BY ts DESC")
         return render_template('history.html', scans=cur.fetchall())
+    
+    
         
 
     @app.route('/export/csv/devices')
@@ -270,17 +285,3 @@ def init_app(app):
     def ws_connect():
         print("WS client conectado")
 
-    @app.route('/api/edb-info')
-    @login_required
-    def edb_info():
-        db = get_db()
-        cur = db.cursor()
-        cur.execute("""
-            SELECT d.ip, p.port, v.id AS vuln_id, e.ebd_id, e.reference_url
-            FROM devices d
-            JOIN ports p ON p.ip = d.ip
-            JOIN vulnerabilities v ON v.port_id = p.id
-            JOIN edbs e ON e.vulnerability_id = v.id;
-        """)
-        rows = cur.fetchall()
-        return jsonify([dict(row) for row in rows])

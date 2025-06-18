@@ -5,16 +5,20 @@
 
   <h3>Assistente de Análise de IP com IA</h3>
   <p>
-    Utilize este assistente para analisar dispositivos na rede e identificar potenciais vulnerabilidades.<br>
-    Selecione um IP abaixo e clique em "Analisar" para obter recomendações de segurança.
+    Utilize este assistente para analisar cada um dos IP's dos seus dispositivos na rede e obter respostas e mitigações para potenciais vulnerabilidades.<br>
+  </p>
+  <p>
+    <strong>Nota:</strong> A análise é feita apenas em IPs com portas abertas detetadas. Se um IP não tiver portas abertas, não será apresentado.
   </p>
   <form method="POST" class="row g-2 align-items-end mb-3">
     <div class="col-auto">
-      <label for="ip" class="form-label mb-2">Seleciona um IP:</label>
+      <p><em>Selecione um IP abaixo e clique em "Analisar" para obter recomendações de segurança.</em></p>
       <select class="form-select shadow" id="ip" name="ip" required >
         <option value="">-- Escolhe um IP --</option>
-        {% for ip in ips %}
-          <option value="{{ ip }}" {% if ip == ip_escolhido %}selected{% endif %}>{{ ip }}</option>
+        {% for ip, mac, hostname in ips %}
+          <option value="{{ ip }}" {% if ip == ip_escolhido %}selected{% endif %}>
+            {{ hostname }}  | IP: {{ ip }}  | MAC: {{ mac }}
+          </option>
         {% endfor %}
       </select>
     </div>
@@ -30,7 +34,7 @@
   <div class="mt-4">
     <div class="card bg-light shadow">
       <div class="card-header bg-light">
-        <h5 class="mb-0">Resposta da IA Gemini</h5>
+        <h5 class="mb-0">Resposta da IA</h5>
       </div>
       <div class="card-body" style="max-height: 500px; overflow-y: auto;">
         <div class="resposta-ia" style="font-family: 'Segoe UI', sans-serif;">

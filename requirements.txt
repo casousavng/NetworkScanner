@@ -12,3 +12,4 @@ pywebview
 screeninfo
 numpy
 google-generativeai
+netifaces

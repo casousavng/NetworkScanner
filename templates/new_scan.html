@@ -2,22 +2,23 @@
 {% block body %}
 <div class="container mt-4">
   <h3>Novo Scan</h3>
-  <p>Escolha o tipo de scan que pretende realizar:</p>
+  <hr>
+  <p><strong>Escolha o tipo de scan que pretende realizar:</strong></p>
 
   <form method="POST" action="{{ url_for('do_scan') }}" id="scanForm">
     <div class="form-group mb-3">
-      <label><strong>Tipo de Scan:</strong></label><br>
+      <p><em>A ordem de scan determina a forma como os IPs são verificados e o tempo de execução do scan.</em></p>
       <div class="form-check form-check-inline">
         <input class="form-check-input" type="radio" name="scan_type" id="scanAll" value="all" checked>
         <label class="form-check-label" for="scanAll">Toda a Rede</label>
       </div>
       <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="scan_type" id="scanSpecific" value="specific">
-        <label class="form-check-label" for="scanSpecific">IP Específico</label>
-      </div>
-      <div class="form-check form-check-inline">
         <input class="form-check-input" type="radio" name="scan_type" id="scanRange" value="range">
         <label class="form-check-label" for="scanRange">Intervalo de IPs</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="scan_type" id="scanSpecific" value="specific">
+        <label class="form-check-label" for="scanSpecific">IP Específico</label>
       </div>
     </div>
 
@@ -35,12 +36,17 @@
       </div>
     </div>
 
+    <hr>
+    <div class="mb-3">
+      <p><strong>Escolha as portas que pretende testar:</strong></p>
+      <p><em>Separe um intervalo de portas com um traço (-) ou portas especificas com virgulas (,); deixe em branco para pesquisar todas as portas (1-65535). Fará com que o scan demore mais tempo.</em></p>
+      <label class="form-label">Range de portas:</label>
+      <input type="text" name="port_range" class="form-control" maxlength="20" placeholder="Ex: 20-80 ou 22,80,443">
+    </div>
+    <hr>
+
     <button type="submit" class="btn btn-primary" id="submitBtn">Iniciar Scan</button>
 
-    <!-- Spinner escondido inicialmente -->
-    <div id="loadingSpinner" style="display:none; margin-top: 10px;">
-      <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> A processar...
-    </div>
   </form>
 
 <script>
@@ -70,16 +76,5 @@
     ipRangeGroup.style.display = 'block';
   });
 
-  // Ao carregar a página, garante estado inicial
-  window.addEventListener('load', () => {
-    loadingSpinner.style.display = 'none';
-    submitBtn.disabled = false;
-  });
-
-  // Intercepta o submit para mostrar spinner e desativar botão
-  form.addEventListener('submit', (event) => {
-    submitBtn.disabled = true;
-    loadingSpinner.style.display = 'inline-flex';
-  });
 </script>
 {% endblock %}

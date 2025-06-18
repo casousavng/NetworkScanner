@@ -1,5 +1,12 @@
 # Ignorar o ficheiro .env
 .env
+.venv/
+.data/
+.app/_pycache__/
+.app/__pycache__/
+.app/db/__pycache__/
+.app/extensions/__pycache__/
+.app/static/__pycache__/
 
 # Ignorar o ficheiro rede.db dentro da pasta data
 data/rede.db

@@ -2,7 +2,7 @@
 {% block body %}
 <div class="container mt-4">
 <h3>Mapa Interativo da Rede</h3>
-<div id="network-graph" style="height: 700px"></div>
+<div id="network-graph" style="height: 800px;"></div>
 
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
@@ -40,12 +40,13 @@
                       <b>Porta:</b> ${p.port}/${(p.protocol || 'tcp').toLowerCase()} <br>
                       <b>Estado:</b> ${state} <br>
                       <b>Serviço:</b> ${p.service || '-'} <br>
+                      <b>Produto:</b> ${p.product || '-'} <br>
                       <b>Versão:</b> ${p.version || '-'} <br>
                       ${Array.isArray(p.cves) && p.cves.length ? `
                       <b>Vulnerabilidades:</b>
                         ${p.cves.length === 0 ? '<i>Sem CVEs detetadas.</i>' : ''}
                         ${p.cves.length > 0 ? `
-                        ${p.cves.length} <br>
+                        ${p.cves.length + p.edb.length} <br>
                         ` : ''}
                       <div style="margin-left: 10px;">
                       <b>CVE's:</b></div> 

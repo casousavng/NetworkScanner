@@ -11,9 +11,9 @@ app = create_app()
 
 def start_flask():
     print("🚀 A iniciar Flask...")
-    socketio.run(app, host='127.0.0.1', port=5002, debug=True, use_reloader=False)
+    socketio.run(app, host='0.0.0.0', port=5002, debug=True, use_reloader=False)
 
-def wait_for_server(url="http://127.0.0.1:5002", timeout=15):
+def wait_for_server(url="http://0.0.0.0:5002", timeout=15):
     for _ in range(timeout * 2):
         try:
             r = requests.get(url)

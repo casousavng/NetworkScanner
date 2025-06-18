@@ -8,9 +8,15 @@ from concurrent.futures import ThreadPoolExecutor
 from .db import get_db
 from .extensions import socketio
 import re
+import netifaces
+
+def get_default_gateway():
+    gateways = netifaces.gateways()
+    default_gateway = gateways['default'][netifaces.AF_INET][0]
+    return default_gateway
 
 
-def scan_and_store(active_ips):
+def scan_and_store(active_ips, port_range):
     start_time = time.time()
 
     print("⚡ Iniciando varredura")
@@ -27,7 +33,11 @@ def scan_and_store(active_ips):
 
     def _scan_ip(ip):
         print(f"🔬 Escaneando IP: {ip}")
-        args = ["nmap", "-sS", "-sV", "--script", "vuln", "-T4", "-p", "1-100", "-oX", "-", ip] # Ajuste os parâmetros conforme necessário 1-100 para portas específicas
+        print(f"🔍 Varredura de portas: {port_range}")
+        args = [
+            "nmap", "-sS", "-sV", "--script", "vuln", "-T4",
+            "-p", port_range, "-oX", "-", ip
+        ]  # Usa port_range fornecido como argumento
         try:
             res = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
             return ET.fromstring(res.stdout)
