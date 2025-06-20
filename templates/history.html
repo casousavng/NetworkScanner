@@ -1,58 +1,107 @@
 {% extends "base.html" %}
 {% block body %}
 <div class="container mt-4">
-  <h3>Histórico de Scans</h3>
+  <h2 class="card-title mb-4" style="font-weight: 700; color: #2c3e50;">
+    <i class="bi bi-clock-history"></i> Histórico de Scans
+  </h2>
 
   {% if scan_stats %}
-    <!-- Campo de pesquisa -->
-    <div class="mb-3">
-      <input type="text" id="searchInput" class="form-control" placeholder="Pesquisar por Scan ID ou Timestamp...">
-    </div>
+  <!-- Campo de pesquisa -->
+  <div class="mb-2">
+    <input type="text" id="searchInput" class="form-control" placeholder="Pesquisar por Scan ID ou Timestamp...">
+  </div>
 
-    <!-- Tabela -->
-    <div class="table-responsive">
-      <table id="tbl-dev" class="table table-striped">
-        <thead>
-          <tr>
-            <th>Scan ID</th>
-            <th>Timestamp</th>
-            <th>IPs distintos</th>
-            <th>Total de Portas</th>
-            <th>Portas abertas</th>
-            <th>CVEs</th>
-            <th>Exploits EDB</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for scan in scan_stats %}
-            <tr>
-              <td>{{ scan.id }}</td>
-              <td>{{ scan.ts }}</td>
-              <td>{{ scan.n_ips }}</td>
-              <td>{{ scan.n_ports }}</td>
-              <td>{{ scan.n_open_ports }}</td>
-              <td>{{ scan.n_cves }}</td>
-              <td>{{ scan.n_edbs }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+  <!-- Tabela -->
+  <div class="table-responsive">
+    <table id="scanTable" class="table table-striped">
+      <thead>
+        <tr>
+          <th>Scan ID</th>
+          <th>Timestamp</th>
+          <th>IPs distintos</th>
+          <th>Total de Portas</th>
+          <th>Portas abertas</th>
+          <th>CVEs</th>
+          <th>Exploits EDB</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for scan in scan_stats %}
+        <tr>
+          <td>{{ scan.id }}</td>
+          <td>{{ scan.ts }}</td>
+          <td>{{ scan.n_ips }}</td>
+          <td>{{ scan.n_ports }}</td>
+          <td>{{ scan.n_open_ports }}</td>
+          <td>{{ scan.n_cves }}</td>
+          <td>{{ scan.n_edbs }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <nav><ul class="pagination" id="pagin"></ul></nav>
   {% else %}
-    <p class="text-muted">Nenhum histórico de scans encontrado.</p>
+  <p class="text-muted">Nenhum histórico de scans encontrado.</p>
   {% endif %}
 </div>
 
-<!-- Script para pesquisa dinâmica -->
+<!-- Script para pesquisa dinâmica e paginação -->
 <script>
-  document.getElementById('searchInput').addEventListener('input', function () {
-    const search = this.value.toLowerCase();
-    const rows = document.querySelectorAll('#scanTable tbody tr');
+document.getElementById('searchInput').addEventListener('input', function () {
+  filterTable();
+  paginate();
+});
 
-    rows.forEach(row => {
-      const text = row.innerText.toLowerCase();
-      row.style.display = text.includes(search) ? '' : 'none';
-    });
+const rowsPerPage = 10;
+let currentPage = 1;
+
+function filterTable() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const rows = document.querySelectorAll('#scanTable tbody tr');
+  rows.forEach(row => {
+    const text = row.innerText.toLowerCase();
+    row.style.display = text.includes(search) ? '' : 'none';
   });
+}
+
+function paginate() {
+  const rows = Array.from(document.querySelectorAll('#scanTable tbody tr')).filter(row => row.style.display !== 'none');
+  const totalRows = rows.length;
+  const totalPages = Math.ceil(totalRows / rowsPerPage);
+
+  // Hide all rows
+  rows.forEach(row => row.style.display = 'none');
+
+  // Show only rows for current page
+  const start = (currentPage - 1) * rowsPerPage;
+  const end = start + rowsPerPage;
+  rows.slice(start, end).forEach(row => row.style.display = '');
+
+  // Pagination controls
+  const pagin = document.getElementById('pagin');
+  pagin.innerHTML = '';
+  for (let i = 1; i <= totalPages; i++) {
+    const li = document.createElement('li');
+    li.className = 'page-item' + (i === currentPage ? ' active' : '');
+    const a = document.createElement('a');
+    a.className = 'page-link';
+    a.href = '#';
+    a.innerText = i;
+    a.onclick = function (e) {
+      e.preventDefault();
+      currentPage = i;
+      paginate();
+    };
+    li.appendChild(a);
+    pagin.appendChild(li);
+  }
+}
+
+// Initial pagination
+window.onload = function () {
+  filterTable();
+  paginate();
+};
 </script>
 {% endblock %}

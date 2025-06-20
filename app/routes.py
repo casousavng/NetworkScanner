@@ -7,8 +7,6 @@ import ipaddress
 import netifaces
 
 from flask import (
-    Flask,
-    app,
     render_template,
     request,
     flash,
@@ -402,7 +400,12 @@ def init_app(app):
                 })
 
         return render_template('history.html', scans=scans, scan_stats=scan_stats, network=network, router_ip=gateway)
-    
+
+    @app.route('/reports')
+    @login_required
+    def reports():
+        return render_template('reports.html', network=network, router_ip=gateway)
+
     # Rota para exportar os dispositivos em formato CSV
     # A rota é protegida por login_required para garantir que apenas utilizadores autenticados possam acessar
     # A função busca todos os dispositivos na tabela devices e os exporta para um arquivo CSV

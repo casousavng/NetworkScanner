@@ -3,6 +3,9 @@
 <div class="container mt-4">
 <div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
   <form method="post" class="w-100" style="max-width: 350px;">
+    <div class="text-center mb-4">
+      <img src="{{ url_for('static', filename='img/network_icon.png') }}" alt="Network Icon" style="width: 200px; height: 200px;">
+    </div>
     <h2 class="text-center mb-4">Login</h2>
     <div class="mb-3">
       <input name="username" maxlength="40" placeholder="Utilizador" class="form-control" required>
@@ -14,3 +17,5 @@
   </form>
 </div>
 {% endblock %}
+
+

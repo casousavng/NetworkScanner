@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block body %}
 <div class="container mt-4">
-<h3>Dispositivos</h3>
+      <h2 class="card-title mb-4" style="font-weight: 700; color: #2c3e50;">
+        <i class="bi bi-hdd-network"></i> Dispositivos na Rede
+      </h2>
 <div class="d-flex mb-2">
   <input id="search" placeholder="Pesquisar..." class="form-control me-2">
-  <a href="{{ url_for('export_csv_devices') }}" class="btn btn-outline-secondary">Exportar CSV Simples</a>
-  <a href="{{ url_for('export_csv_devices_full') }}" class="btn btn-outline-secondary ms-2">Exportar CSV Completo</a>
 </div>
 <table id="tbl-dev" class="table table-striped">
   <thead><tr>
@@ -13,7 +13,7 @@
     <th title="Nome do dispositivo">Hostname</th>
     <th title="Endereço MAC do dispositivo">MAC</th>
     <th title="Fabricante do dispositivo (se disponível)">Vendor</th>
-    <th title="Última vez que o dispositivo foi detetado">Último Scan</th>
+    <th title="Última vez que o dispositivo foi detetado">Última vez detetado</th>
   </tr></thead>
   <tbody>
     {% for d in devices %}
@@ -26,7 +26,3 @@
 </table>
 <nav><ul class="pagination" id="pagin"></ul></nav>
 {% endblock %}
-
-<script>
-// Implementação do filtro de busca e paginação vai aqui
-</script>

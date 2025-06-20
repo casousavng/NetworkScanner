@@ -1,14 +1,36 @@
 {% extends "base.html" %}
 {% block body %}
 <div class="container mt-4">
-  <h3>Sobre</h3>
-  <p>Scanner de Rede desenvolvido para análise e monitorização de dispositivos e vulnerabilidades.</p>
-  <p><b>Versão:</b> 1.0</p>
-  <p><b>Autor:</b> Carlos Sousa, David Sá, Matteo Robert</p>
-  <p><b>Data de Lançamento:</b> Junho de 2025</p>
-  <p><b>Descrição:</b> Esta aplicação permite realizar scans de rede, identificar dispositivos conectados, verificar portas abertas e analisar vulnerabilidades conhecidas. É uma ferramenta útil para administradores de rede e profissionais de segurança.</p>
-  <p><b>Requisitos:</b> Python 3.8 ou superior, Flask, SQLite, Socket.IO.</p>
-  <p><b>Licença:</b> MIT License</p>
-  <p>Para mais informações, consulte a documentação oficial.</p>
-</div>
+    <div class="card-body">
+      <div class="mb-4">
+        <h2 class="card-title mb-4" style="font-weight: 700; color: #2c3e50;">
+          <i class="bi bi-info-circle-fill" aria-hidden="true"></i> Sobre o Projeto
+      </h2>
+              <img src="{{ url_for('static', filename='img/network_icon.png') }}" alt="Network Scanner Logo" width="80" class="mb-3">
+        <p class="lead text-muted">Análise e monitorização de dispositivos e vulnerabilidades de rede.</p>
+      </div>
+      <ul class="list-group list-group-flush mb-4">
+        <li class="list-group-item"><strong>Versão:</strong> 1.0</li>
+        <li class="list-group-item"><strong>Autores:</strong> Carlos Sousa, David Sá, Matteo Robert</li>
+        <li class="list-group-item"><strong>Data de Lançamento:</strong> Junho de 2025</li>
+        <li class="list-group-item"><strong>Licença:</strong> MIT License</li>
+      </ul>
+      <div class="mb-4">
+        <h5 class="font-weight-bold">Descrição</h5>
+        <p>Esta aplicação permite realizar <span class="text-primary font-weight-bold">scans de rede</span>, identificar dispositivos conectados, verificar portas abertas e analisar vulnerabilidades conhecidas. É uma ferramenta útil para administradores de rede e profissionais de segurança.</p>
+      </div>
+      <div class="mb-4">
+        <h5 class="font-weight-bold">Requisitos</h5>
+        <ul>
+          <li>Python 3.8 ou superior</li>
+          <li>Flask</li>
+          <li>SQLite</li>
+          <li>Socket.IO</li>
+        </ul>
+      </div>
+      <div class="alert alert-info text-center">
+        Para mais informações, consulte a <a href="#" class="alert-link">documentação oficial</a>.
+      </div>
+    </div>
+  </div>
 {% endblock %}

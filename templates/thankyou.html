@@ -1,8 +1,15 @@
 {% extends "base.html" %}
 {% block body %}
-<div class="container mt-4">
-  <h3>Obrigado pelo seu comentário!</h3>
-  <p>Agradecemos o seu feedback. Tentaremos responder e resolver o problema o mais rapidamente possível.</p>
-  <a href="{{ url_for('index') }}" class="btn btn-primary">Voltar ao Mapa de Rede</a>
+<div class="container mt-5 d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+  <div class="card shadow-lg p-4" style="max-width: 500px; width: 100%;">
+    <div class="text-center">
+      <svg width="64" height="64" fill="#28a745" class="mb-3" viewBox="0 0 16 16">
+        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM7 11.414l5.207-5.207-1.414-1.414L7 8.586 5.207 6.793 3.793 8.207 7 11.414z"/>
+      </svg>
+      <h3 class="mb-3 text-success">Obrigado pelo seu comentário!</h3>
+      <p class="mb-4">Agradecemos o seu feedback.<br>Tentaremos responder e resolver o problema o mais rapidamente possível.</p>
+      <a href="{{ url_for('index') }}" class="btn btn-success btn-lg px-4">Voltar ao Mapa de Rede</a>
+    </div>
+  </div>
 </div>
 {% endblock %}

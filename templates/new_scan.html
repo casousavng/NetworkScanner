@@ -1,64 +1,101 @@
 {% extends "base.html" %}
 {% block body %}
 <div class="container mt-4">
-  <h3>Novo Scan</h3>
-  <hr>
-  <p><strong>Escolha o tipo de scan que pretende realizar:</strong></p>
-
-  <form method="POST" action="{{ url_for('do_scan') }}" id="scanForm">
-    <div class="form-group mb-3">
-      <p><em>A ordem de scan determina a forma como os IPs são verificados e o tempo de execução do scan.</em></p>
-    <p>Rede Atual:<br>
-      <strong>Endereço de Rede:</strong> {{ network.addr }} |
-      <strong>IP do Router:</strong> {{ router_ip }} |
-      <strong>Máscara de Rede:</strong> {{ network.netmask }} |
-      <strong>Broadcast:</strong> {{ network.broadcast }}
-    </p>
-    <label class="form-label">Pesquisar:</label><br>
-      <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="scan_type" id="scanAll" value="all" checked>
-        <label class="form-check-label" for="scanAll">Toda a Rede</label>
+    <div class="card-body">
+      <h2 class="card-title mb-4" style="font-weight: 700; color: #2c3e50;">
+        <i class="bi bi-search"></i> Novo Scan de Rede
+      </h2>
+      <hr>
+      <div class="mb-3">
+        <p class="lead mb-1"><strong>Escolha o tipo de scan que pretende realizar:</strong></p>
+        <p class="text-muted small mb-2">
+          <i class="bi bi-info-circle"></i>
+          A ordem de scan determina a forma como os IPs são verificados e o tempo de execução do scan.
+        </p>
+        <div class="alert alert-secondary py-2 mb-0">
+          <span class="fw-bold">Rede Atual:</span><br>
+          <span class="badge bg-primary me-1">Endereço de Rede: {{ network.addr }}</span>
+          <span class="badge bg-success me-1">IP do Router: {{ router_ip }}</span>
+          <span class="badge bg-info text-dark me-1">Máscara: {{ network.netmask }}</span>
+          <span class="badge bg-warning text-dark">Broadcast: {{ network.broadcast }}</span>
+        </div>
       </div>
-      <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="scan_type" id="scanRange" value="range">
-        <label class="form-check-label" for="scanRange">Intervalo de IPs</label>
-      </div>
-      <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="scan_type" id="scanSpecific" value="specific">
-        <label class="form-check-label" for="scanSpecific">IP Específico</label>
-      </div>
-    </div>
 
-    <div class="form-group mb-3" id="ipInputGroup" style="display: none;">
-      <label for="ip_range">Endereço IP:</label>
-      <input type="text" class="form-control" id="ip_range" name="ip_range" placeholder="Ex: 192.168.1.10">
-    </div>
+      <form method="POST" action="{{ url_for('do_scan') }}" id="scanForm" autocomplete="off">
+        <div class="form-group mb-4">
+          <label class="form-label fw-semibold">Pesquisar:</label><br>
+          <div class="btn-group" role="group" aria-label="Tipo de Scan">
+            <input type="radio" class="btn-check" name="scan_type" id="scanAll" value="all" checked>
+            <label class="btn btn-outline-primary" for="scanAll"><i class="bi bi-globe"></i> Toda a Rede</label>
 
-    <div class="form-group mb-3" id="ipRangeGroup" style="display: none;">
-      <label for="ip_start">Intervalo de IPs:</label>
-      <div class="input-group">
-        <input type="text" class="form-control" id="ip_start" name="ip_start" placeholder="IP inicial (Ex: 192.168.1.10)">
-        <span class="input-group-text">até</span>
-        <input type="text" class="form-control" id="ip_end" name="ip_end" placeholder="IP final (Ex: 192.168.1.20)">
-      </div>
-    </div>
+            <input type="radio" class="btn-check" name="scan_type" id="scanRange" value="range">
+            <label class="btn btn-outline-primary" for="scanRange"><i class="bi bi-arrows-expand"></i> Intervalo de IPs</label>
 
-    <hr>
-    <div class="mb-3">
-      <p><strong>Escolha as portas que pretende testar:</strong></p>
-      <p><em>Separe um intervalo de portas com um traço (-) ou portas especificas com virgulas (,); deixe em branco para pesquisar todas as portas (1-65535). Fará com que o scan demore mais tempo.</em></p>
-      <label class="form-label">Range de portas:</label>
-      <input type="text" name="port_range" class="form-control" maxlength="20" placeholder="Ex: 20-80 ou 22,80,443">
-    </div>
-    <hr>
+            <input type="radio" class="btn-check" name="scan_type" id="scanSpecific" value="specific">
+            <label class="btn btn-outline-primary" for="scanSpecific"><i class="bi bi-dot"></i> IP Específico</label>
+          </div>
+        </div>
 
-    <button type="submit" class="btn btn-primary" id="submitBtn">
-      <span id="submitText">Iniciar Scan</span>
-      <span id="spinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
-    </button>
-    <div id="scanMessage" class="alert alert-warning mt-3 d-none"></div>
-    <div id="scanMessage2" class="alert alert-danger mt-3 d-none"></div>
-  </form>
+        <div class="form-group mb-3" id="ipInputGroup" style="display: none;">
+          <label for="ip_range" class="form-label">Endereço IP:</label>
+          <input type="text" class="form-control" id="ip_range" name="ip_range" placeholder="Ex: 192.168.1.10">
+        </div>
+
+        <div class="form-group mb-3" id="ipRangeGroup" style="display: none;">
+          <label for="ip_start" class="form-label">Intervalo de IPs:</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="ip_start" name="ip_start" placeholder="IP inicial (Ex: 192.168.1.10)">
+            <span class="input-group-text">até</span>
+            <input type="text" class="form-control" id="ip_end" name="ip_end" placeholder="IP final (Ex: 192.168.1.20)">
+          </div>
+        </div>
+
+        <hr>
+        <div class="mb-4">
+          <p class="fw-semibold mb-1"><i class="bi bi-box-arrow-in-right"></i> Escolha as portas que pretende testar:</p>
+          <p class="text-muted small mb-2">
+            Separe um intervalo de portas com um traço (-) ou portas específicas com vírgulas (,).<br>
+            Deixe em branco para pesquisar todas as portas (1-65535). <span class="text-danger">Isto pode demorar mais tempo.</span>
+          </p>
+          <label class="form-label">Range de portas:</label>
+          <input type="text" name="port_range" class="form-control" maxlength="20" placeholder="Ex: 20-80 ou 22,80,443">
+        </div>
+        <hr>
+
+        <div class="d-grid gap-2">
+          <button type="submit" class="btn btn-lg btn-gradient-primary" id="submitBtn" style="background: linear-gradient(90deg, #007bff 0%, #00c6ff 100%); color: white;">
+            <span id="submitText"><i class="bi bi-play-circle"></i> Iniciar Scan</span>
+            <span id="spinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div id="scanMessage" class="alert alert-warning mt-3 d-none"></div>
+        <div id="scanMessage2" class="alert alert-danger mt-3 d-none"></div>
+      </form>
+    </div>
+  </div>
+
+<style>
+  .btn-gradient-primary {
+    background: linear-gradient(90deg, #007bff 0%, #00c6ff 100%);
+    border: none;
+    color: white;
+    transition: box-shadow 0.2s;
+  }
+  .btn-gradient-primary:hover, .btn-gradient-primary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    color: white;
+  }
+  .card {
+    border-radius: 1.2rem;
+  }
+  .input-group-text {
+    background: #f0f4f8;
+    font-weight: 500;
+  }
+  .form-label {
+    font-weight: 500;
+  }
+</style>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -74,72 +111,62 @@
     const scanMessage = document.getElementById('scanMessage');
     const scanMessage2 = document.getElementById('scanMessage2');
 
-  // Mostra/oculta input IP conforme opção
-scanAllRadio.addEventListener('change', () => {
-  ipInputGroup.style.display = 'none';
-  ipRangeGroup.style.display = 'none';
-  document.getElementById('ip_range').disabled = true;
-  document.getElementById('ip_start').disabled = true;
-  document.getElementById('ip_end').disabled = true;
-});
+    scanAllRadio.addEventListener('change', () => {
+      ipInputGroup.style.display = 'none';
+      ipRangeGroup.style.display = 'none';
+      document.getElementById('ip_range').disabled = true;
+      document.getElementById('ip_start').disabled = true;
+      document.getElementById('ip_end').disabled = true;
+    });
 
-scanSpecificRadio.addEventListener('change', () => {
-  ipInputGroup.style.display = 'block';
-  ipRangeGroup.style.display = 'none';
-  document.getElementById('ip_range').disabled = false;
-  document.getElementById('ip_start').disabled = true;
-  document.getElementById('ip_end').disabled = true;
-});
+    scanSpecificRadio.addEventListener('change', () => {
+      ipInputGroup.style.display = 'block';
+      ipRangeGroup.style.display = 'none';
+      document.getElementById('ip_range').disabled = false;
+      document.getElementById('ip_start').disabled = true;
+      document.getElementById('ip_end').disabled = true;
+    });
 
-scanRangeRadio.addEventListener('change', () => {
-  ipInputGroup.style.display = 'none';
-  ipRangeGroup.style.display = 'block';
-  document.getElementById('ip_range').disabled = true;
-  document.getElementById('ip_start').disabled = false;
-  document.getElementById('ip_end').disabled = false;
-});
-  // Quando submeter o formulário
-  form.addEventListener('submit', function (event) {
-    // Evita múltiplos envios
-    submitBtn.disabled = true;
-    
-    // Tenta desativar os botões na navbar
-    setTimeout(function() {
-      const btnIds = [
-        'scan', 'mapa', 'dispositivos', 'historico',
-        'assistenteIA', 'ajuda', 'sobre', 'reportarProblema'
-      ];
-      btnIds.forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) {
-          btn.disabled = true;
-          btn.classList.add('nav-btn-disabled');
+    scanRangeRadio.addEventListener('change', () => {
+      ipInputGroup.style.display = 'none';
+      ipRangeGroup.style.display = 'block';
+      document.getElementById('ip_range').disabled = true;
+      document.getElementById('ip_start').disabled = false;
+      document.getElementById('ip_end').disabled = false;
+    });
 
-        }
-        // Desativa os radio buttons de tipo de scan
-        const radios = document.querySelectorAll('input[name="scan_type"]');
-        radios.forEach(radio => {
-          radio.disabled = true;
+    form.addEventListener('submit', function (event) {
+      submitBtn.disabled = true;
+      setTimeout(function() {
+        const btnIds = [
+          'scan', 'mapa', 'dispositivos', 'historico',
+          'assistenteIA', 'relatorios', 'ajuda', 'sobre', 'reportarProblema'
+        ];
+        btnIds.forEach(id => {
+          const btn = document.getElementById(id);
+          if (btn) {
+            btn.disabled = true;
+            btn.classList.add('nav-btn-disabled');
+          }
+          const radios = document.querySelectorAll('input[name="scan_type"]');
+          radios.forEach(radio => {
+            radio.disabled = true;
+          });
+          document.querySelector('input[name="port_range"]').disabled = true;
+          document.getElementById('ip_range').disabled = true;
+          document.getElementById('ip_start').disabled = true;
+          document.getElementById('ip_end').disabled = true;
         });
-        document.querySelector('input[name="port_range"]').disabled = true;
-        document.getElementById('ip_range').disabled = true;
-        document.getElementById('ip_start').disabled = true;
-        document.getElementById('ip_end').disabled = true;
-      });
-    }, 0);
+      }, 0);
 
-    // Mostra spinner
-    spinner.classList.remove('d-none');
+      spinner.classList.remove('d-none');
+      submitText.innerHTML = '<i class="bi bi-hourglass-split"></i> A realizar scan...';
 
-    // Altera texto do botão
-    submitText.textContent = 'A realizar scan...';
-
-    scanMessage.classList.remove('d-none');
-    scanMessage2.classList.remove('d-none');
-    scanMessage2.textContent = 'POR FAVOR NÃO FECHE OU FAÇA REFRESH NA PÁGINA DURANTE O SCAN! ';
-    scanMessage.textContent = 'O scan pode demorar alguns minutos. Será redirecionado para o mapa de rede quando terminar.';
+      scanMessage.classList.remove('d-none');
+      scanMessage2.classList.remove('d-none');
+      scanMessage2.innerHTML = '<i class="bi bi-exclamation-triangle"></i> POR FAVOR NÃO FECHE OU FAÇA REFRESH NA PÁGINA DURANTE O SCAN!';
+      scanMessage.innerHTML = '<i class="bi bi-clock-history"></i> O scan pode demorar alguns minutos. Será redirecionado para o mapa de rede quando terminar.';
+    });
   });
-  }); // fecha DOMContentLoaded
-
 </script>
 {% endblock %}
