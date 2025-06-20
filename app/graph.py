@@ -1,7 +1,6 @@
 import networkx as nx
 import plotly.graph_objs as go
 from .db import get_db
-from flask import current_app
 from .scan import get_default_gateway
 
 def build_network_data():

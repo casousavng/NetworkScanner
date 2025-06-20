@@ -8,6 +8,13 @@
   <form method="POST" action="{{ url_for('do_scan') }}" id="scanForm">
     <div class="form-group mb-3">
       <p><em>A ordem de scan determina a forma como os IPs são verificados e o tempo de execução do scan.</em></p>
+    <p>Rede Atual:<br>
+      <strong>Endereço de Rede:</strong> {{ network.addr }} |
+      <strong>IP do Router:</strong> {{ router_ip }} |
+      <strong>Máscara de Rede:</strong> {{ network.netmask }} |
+      <strong>Broadcast:</strong> {{ network.broadcast }}
+    </p>
+    <label class="form-label">Pesquisar:</label><br>
       <div class="form-check form-check-inline">
         <input class="form-check-input" type="radio" name="scan_type" id="scanAll" value="all" checked>
         <label class="form-check-label" for="scanAll">Toda a Rede</label>
@@ -128,9 +135,9 @@ scanRangeRadio.addEventListener('change', () => {
     submitText.textContent = 'A realizar scan...';
 
     scanMessage.classList.remove('d-none');
-    scanMessage.textContent = 'O scan pode demorar alguns minutos. Será redirecionado para o mapa de rede quando terminar.';
     scanMessage2.classList.remove('d-none');
     scanMessage2.textContent = 'POR FAVOR NÃO FECHE OU FAÇA REFRESH NA PÁGINA DURANTE O SCAN! ';
+    scanMessage.textContent = 'O scan pode demorar alguns minutos. Será redirecionado para o mapa de rede quando terminar.';
   });
   }); // fecha DOMContentLoaded
 

@@ -8,31 +8,28 @@
 
 </head>
 <body>
-  <div class="sidebar shadow">
+  <div class="sidebar shadow d-flex flex-column" style="height: 100vh;">
     <h5>Menu</h5>
-    <ul class="nav flex-column">
+    <ul class="nav flex-column flex-grow-1">
       <li class="nav-item"><a class="nav-link menu-link" id="mapa" href="{{ url_for('index') }}">Mapa</a></li>
-      <li class="nav-item"><a class="nav-link menu-link" id="dispositivos" href="{{ url_for('list_devices') }}">Dispositivos</a></li>
       <li class="nav-item"><a class="nav-link menu-link" id="scan" href="{{ url_for('new_scan') }}">Iniciar Scan</a></li>
+      <li class="nav-item"><a class="nav-link menu-link" id="dispositivos" href="{{ url_for('list_devices') }}">Dispositivos</a></li>
       <li class="nav-item"><a class="nav-link menu-link" id="historico" href="{{ url_for('history') }}">Histórico</a></li>
       <li class="nav-item"><a class="nav-link menu-link" id="assistenteIA" href="{{ url_for('ai_assist') }}">Assistente IA</a></li>
-      <li class="nav-item"><a class="nav-link menu-link" id="sobre" href="{{ url_for('about') }}">Sobre</a></li>
       <li class="nav-item"><a class="nav-link menu-link" id="ajuda" href="{{ url_for('help') }}">Ajuda</a></li>
+      <li class="nav-item"><a class="nav-link menu-link" id="sobre" href="{{ url_for('about') }}">Sobre</a></li>
       <li class="nav-item"><a class="nav-link menu-link" id="reportarProblema" href="{{ url_for('report_issue') }}">Reportar Problema</a></li>
-
-
       <li><hr></li>
       <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></li>
-      <li class="nav-item">
-        {% if not sair_desativado %}
-        <a class="nav-link" href="#" onclick="fecharApp()">Sair</a>
-        {% else %}
-        <span class="nav-link disabled">Sair (Desativado)</span>
-        {% endif %}
-      </li>
-    </li>
-      </li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="fecharApp()">Sair</a></li>
+      <li><hr></li>
     </ul>
+    <span class="nav-link disabled mt-auto mb-1" style="font-size: 0.9em;">
+      <strong>IP atual:</strong> {{ network.addr }}<br>
+      <strong>IP router:</strong> {{ router_ip }}
+      <strong>Máscara:</strong> {{ network.netmask }}
+      <strong>Broadcast:</strong> {{ network.broadcast }}
+    </span>
   </div>
   <div class="content">
     {% block body %}{% endblock %}

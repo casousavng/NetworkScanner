@@ -324,9 +324,10 @@ def scan_and_store(active_ips, port_range):
 
         # Guarda estatísticas na base de dados
         cur.execute("""
-            INSERT OR REPLACE INTO scans (ts, n_ips, n_ports, n_open_ports, n_cves, n_edbs)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (ts, n_ips, n_ports, n_open_ports, n_cves, n_edbs))
+            UPDATE scans SET
+                n_ips = ?, n_ports = ?, n_open_ports = ?, n_cves = ?, n_edbs = ?
+            WHERE id = ?
+        """, (n_ips, n_ports, n_open_ports, n_cves, n_edbs, scan_id))
         db.commit()
         
     extract_cves_from_description()

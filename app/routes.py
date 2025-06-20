@@ -5,7 +5,6 @@ import io
 import json
 import ipaddress
 import netifaces
-from dotenv import load_dotenv
 
 from flask import (
     Flask,
@@ -20,7 +19,7 @@ from flask import (
 )
 from flask_login import login_required
 
-from .mail import mail, init_mail, send_issue_report
+from .mail import send_issue_report
 from .ai import fazer_pergunta, formatar_resposta_markdown_para_html
 from .db import get_db
 from .scan import scan_and_store
@@ -31,6 +30,10 @@ import plotly
 
 # Função para inicializar as rotas da aplicação Flask
 # Esta função é chamada no início da aplicação para configurar as rotas
+
+network = netifaces.ifaddresses(netifaces.gateways()['default'][netifaces.AF_INET][1])[netifaces.AF_INET][0]
+gateway = netifaces.gateways()['default'][netifaces.AF_INET][0]
+
 
 def init_app(app):
 
@@ -55,6 +58,7 @@ def init_app(app):
                 # Obter a rede local automaticamente
                 iface = netifaces.gateways()['default'][netifaces.AF_INET][1]
                 net = netifaces.ifaddresses(iface)[netifaces.AF_INET][0]
+                # Obter o IP do router (gateway padrão)
                 ip = net['addr']
                 mask = net['netmask']
                 # Calcular o CIDR
@@ -105,7 +109,7 @@ def init_app(app):
         else:
             scan_progress = 0
 
-        return render_template('index.html', graphJSON=graphJSON, scan_progress=scan_progress)
+        return render_template('index.html', graphJSON=graphJSON, scan_progress=scan_progress, network=network, router_ip=gateway)
     
     # Rota para a API que retorna informações detalhadas sobre um dispositivo específico
     # A rota aceita um parâmetro IP e retorna informações sobre o dispositivo, incluindo portas abertas
@@ -207,7 +211,7 @@ def init_app(app):
     def list_devices():
         db = get_db(); cur = db.cursor()
         cur.execute("SELECT * FROM devices")
-        return render_template('devices.html', devices=cur.fetchall())
+        return render_template('devices.html', devices=cur.fetchall(), network=network, router_ip=gateway)
     
     # Rota para a página de assistente de IA
     # Permite ao utilizador selecionar um dispositivo e obter recomendações de segurança
@@ -293,7 +297,9 @@ def init_app(app):
             ips=ips,
             ip_escolhido=ip_escolhido,
             resposta=resposta,
-            resposta_ia=resposta_ia
+            resposta_ia=resposta_ia,
+            network=network,
+            router_ip=gateway
         )
     
     # Rota para a página de novo scan
@@ -306,7 +312,8 @@ def init_app(app):
     @app.route('/new_scan')
     @login_required
     def new_scan():
-        return render_template('new_scan.html')
+        
+        return render_template('new_scan.html', network=network, router_ip=gateway)
 
     # Rota para a página de sobre
     # Exibe informações sobre a aplicação, como versão, autor e descrição
@@ -314,7 +321,7 @@ def init_app(app):
     # A rota usa o decorator login_required para garantir que apenas utilizadores autenticados possam acessar
     @app.route('/about')
     def about():
-        return render_template('about.html')
+        return render_template('about.html', network=network, router_ip=gateway)
 
     # Rota para a página de ajuda
     # Exibe informações de ajuda sobre como usar a aplicação
@@ -324,7 +331,7 @@ def init_app(app):
     @app.route('/help')
     @login_required
     def help():
-        return render_template('help.html')
+        return render_template('help.html', network=network, router_ip=gateway)
 
     # Rota para a página de reportar problema
     # Exibe um formulário para reportar problemas ou bugs na aplicação
@@ -350,14 +357,14 @@ def init_app(app):
             flash('Obrigado por reportar o problema. Entraremos em contacto em breve.', 'success')
             return redirect(url_for('thank_you'))
 
-        return render_template('report_issue.html')  # Teu formulário
+        return render_template('report_issue.html', network=network, router_ip=gateway)
 
     # Rota para a página de agradecimento
     # Exibe uma mensagem de agradecimento após o utilizador reportar um problema
     @app.route('/thankyou')
     @login_required
     def thank_you():
-        return render_template('thankyou.html')
+        return render_template('thankyou.html', network=network, router_ip=gateway)
 
     # Rota para exibir o histórico de scans
     # Exibe uma lista de todos os scans realizados, ordenados por data
@@ -395,7 +402,7 @@ def init_app(app):
                     "n_edbs": 0
                 })
 
-        return render_template('history.html', scans=scans, scan_stats=scan_stats)
+        return render_template('history.html', scans=scans, scan_stats=scan_stats, network=network, router_ip=gateway)
     
     # Rota para exportar os dispositivos em formato CSV
     # A rota é protegida por login_required para garantir que apenas utilizadores autenticados possam acessar
