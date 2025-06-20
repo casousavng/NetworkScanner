@@ -15,11 +15,10 @@ def build_network_data():
     rows = cur.fetchall()
 
     G = nx.Graph()
-    #router = current_app.config["ROUTER_IP"]
 
-    
-
-    G.add_node(router, label="Router", type="router")
+    if rows:
+        G.add_node(router, label="Router", type="router")
+        
     for r in rows:
         ip, host, vendor = r["ip"], r["hostname"], r["vendor"]
         if ip == router:

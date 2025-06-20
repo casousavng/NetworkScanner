@@ -62,3 +62,9 @@ CREATE TABLE vulnerabilities (
     FOREIGN KEY (port_id) REFERENCES ports (id),
     UNIQUE (port_id, script_id)
 );
+
+CREATE TABLE scan_status (
+    id SERIAL PRIMARY KEY,
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP
+);

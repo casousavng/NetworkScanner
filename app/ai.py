@@ -10,8 +10,8 @@ genai.configure(api_key="AIzaSyBMblnQRiKrXizWbirc_fQ4wPqpSX1FHcM")
 # Inicializa o modelo Gemini (podes escolher outro se quiseres)
 model = genai.GenerativeModel('gemini-2.0-flash-001')
 
-def fazer_pergunta(prompt, tem_cves=False, tem_edbs=False, tem_portas=False):
-    if not any([tem_cves, tem_edbs, tem_portas]):
+def fazer_pergunta(prompt, tem_cves=False, tem_edbs=False, tem_portas_abertas=False):
+    if not any([tem_cves, tem_edbs, tem_portas_abertas]):
         return (
             "Não foram detetadas portas abertas, serviços vulneráveis, CVEs ou EDBs neste dispositivo.<br>"
             "Recomenda-se manter o dispositivo atualizado e monitorizar regularmente para garantir a segurança."
@@ -20,7 +20,7 @@ def fazer_pergunta(prompt, tem_cves=False, tem_edbs=False, tem_portas=False):
     full_prompt = f"""
 És um especialista em cibersegurança. Recebeste a saída de uma análise de segurança a um IP com possíveis vulnerabilidades.
 
-Tua tarefa:
+A tua tarefa:
 - Analisar serviços vulneráveis, versões desatualizadas, CVEs e referências EDB identificadas.
 - Gerar um plano de mitigação bem estruturado.
 

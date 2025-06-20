@@ -14,8 +14,8 @@ app = create_app()
 
 def start_flask():
     print("🚀 A iniciar Flask...")
-    socketio.run(app, host='127.0.0.1', port=5005, debug=False, use_reloader=False)
-
+    socketio.run(app, host='127.0.0.1', port=5005, debug=True, use_reloader=False)
+    
 def show_main_app(window):
     if not wait_for_server():
         print("❌ Erro: servidor não respondeu.")

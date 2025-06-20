@@ -4,7 +4,8 @@
 <h3>Dispositivos</h3>
 <div class="d-flex mb-2">
   <input id="search" placeholder="Pesquisar..." class="form-control me-2">
-  <a href="{{ url_for('export_csv_devices') }}" class="btn btn-outline-secondary">Exportar CSV</a>
+  <a href="{{ url_for('export_csv_devices') }}" class="btn btn-outline-secondary">Exportar CSV Simples</a>
+  <a href="{{ url_for('export_csv_devices_full') }}" class="btn btn-outline-secondary ms-2">Exportar CSV Completo</a>
 </div>
 <table id="tbl-dev" class="table table-striped">
   <thead><tr>

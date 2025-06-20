@@ -45,36 +45,84 @@
     </div>
     <hr>
 
-    <button type="submit" class="btn btn-primary" id="submitBtn">Iniciar Scan</button>
-
+    <button type="submit" class="btn btn-primary" id="submitBtn">
+      <span id="submitText">Iniciar Scan</span>
+      <span id="spinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+    </button>
+    <div id="scanMessage" class="alert alert-warning mt-3 d-none"></div>
+    <div id="scanMessage2" class="alert alert-danger mt-3 d-none"></div>
   </form>
 
 <script>
-  const scanAllRadio = document.getElementById('scanAll');
-  const scanSpecificRadio = document.getElementById('scanSpecific');
-  const scanRangeRadio = document.getElementById('scanRange');
-  const ipInputGroup = document.getElementById('ipInputGroup');
-  const ipRangeGroup = document.getElementById('ipRangeGroup');
-  const ipInput = document.getElementById('ip_range');
-  const form = document.getElementById('scanForm');
-  const submitBtn = document.getElementById('submitBtn');
-  const loadingSpinner = document.getElementById('loadingSpinner');
+  document.addEventListener('DOMContentLoaded', function() {
+    const scanAllRadio = document.getElementById('scanAll');
+    const scanSpecificRadio = document.getElementById('scanSpecific');
+    const scanRangeRadio = document.getElementById('scanRange');
+    const ipInputGroup = document.getElementById('ipInputGroup');
+    const ipRangeGroup = document.getElementById('ipRangeGroup');
+    const form = document.getElementById('scanForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+    const spinner = document.getElementById('spinner');
+    const scanMessage = document.getElementById('scanMessage');
+    const scanMessage2 = document.getElementById('scanMessage2');
 
   // Mostra/oculta input IP conforme opção
-  scanAllRadio.addEventListener('change', () => {
-    ipInputGroup.style.display = 'none';
-    ipRangeGroup.style.display = 'none';
-  });
+scanAllRadio.addEventListener('change', () => {
+  ipInputGroup.style.display = 'none';
+  ipRangeGroup.style.display = 'none';
+  document.getElementById('ip_range').disabled = true;
+  document.getElementById('ip_start').disabled = true;
+  document.getElementById('ip_end').disabled = true;
+});
 
-  scanSpecificRadio.addEventListener('change', () => {
-    ipInputGroup.style.display = 'block';
-    ipRangeGroup.style.display = 'none';
-  });
+scanSpecificRadio.addEventListener('change', () => {
+  ipInputGroup.style.display = 'block';
+  ipRangeGroup.style.display = 'none';
+  document.getElementById('ip_range').disabled = false;
+  document.getElementById('ip_start').disabled = true;
+  document.getElementById('ip_end').disabled = true;
+});
 
-  scanRangeRadio.addEventListener('change', () => {
-    ipInputGroup.style.display = 'none';
-    ipRangeGroup.style.display = 'block';
+scanRangeRadio.addEventListener('change', () => {
+  ipInputGroup.style.display = 'none';
+  ipRangeGroup.style.display = 'block';
+  document.getElementById('ip_range').disabled = true;
+  document.getElementById('ip_start').disabled = false;
+  document.getElementById('ip_end').disabled = false;
+});
+  // Quando submeter o formulário
+  form.addEventListener('submit', function (event) {
+    // Evita múltiplos envios
+    submitBtn.disabled = true;
+    // Tenta desativar os botões na navbar
+    setTimeout(function() {
+      const btnIds = [
+        'scan', 'mapa', 'dispositivos', 'historico',
+        'assistenteIA', 'ajuda', 'sobre', 'reportarProblema'
+      ];
+      btnIds.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+          btn.disabled = true;
+          btn.classList.add('nav-btn-disabled');
+
+        }
+      });
+    }, 0);
+
+    // Mostra spinner
+    spinner.classList.remove('d-none');
+
+    // Altera texto do botão
+    submitText.textContent = 'A realizar scan...';
+
+    scanMessage.classList.remove('d-none');
+    scanMessage.textContent = 'O scan pode demorar alguns minutos. Será redirecionado para o mapa de rede quando terminar.';
+    scanMessage2.classList.remove('d-none');
+    scanMessage2.textContent = 'POR FAVOR NÃO FECHE OU FAÇA REFRESH NA PÁGINA DURANTE O SCAN! ';
   });
+  }); // fecha DOMContentLoaded
 
 </script>
 {% endblock %}

@@ -1,14 +1,12 @@
 {% extends "base.html" %}
 {% block body %}
 <div class="container mt-4">
-  <h3>Reportar Problema</h3>
-  <form>
-    <div class="mb-3">
-      <label for="issue" class="form-label">Descreva o problema:</label>
-      <textarea id="issue" class="form-control" rows="5"></textarea>
-    </div>
-    <button type="submit" class="btn btn-primary" disabled>Enviar</button>
-    <p class="mt-2 text-muted">Funcionalidade em desenvolvimento.</p>
-  </form>
+<form method="POST" action="{{ url_for('report_issue') }}">
+  <div class="mb-3">
+    <label for="issue" class="form-label">Descreva o problema:</label>
+    <textarea id="issue" name="issue" class="form-control" rows="5" required></textarea>
+  </div>
+  <button type="submit" class="btn btn-primary">Enviar</button>
+</form>
 </div>
 {% endblock %}
