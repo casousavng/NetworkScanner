@@ -34,7 +34,6 @@ import plotly
 network = netifaces.ifaddresses(netifaces.gateways()['default'][netifaces.AF_INET][1])[netifaces.AF_INET][0]
 gateway = netifaces.gateways()['default'][netifaces.AF_INET][0]
 
-
 def init_app(app):
 
     # Rota para iniciar o scan
