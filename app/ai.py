@@ -23,6 +23,9 @@ def fazer_pergunta(prompt, tem_cves=False, tem_edbs=False, tem_portas_abertas=Fa
 A tua tarefa:
 - Analisar serviços vulneráveis, versões desatualizadas, CVEs e referências EDB identificadas.
 - Gerar um plano de mitigação bem estruturado.
+- Responder de forma clara e técnica, com foco em segurança.
+- Nao deves usar linguagem de programação, apenas texto explicativo.
+- Nao deves usar tabelas, podes usar listas ordenadas ou não ordenadas.
 
 Segue este formato de resposta:
 

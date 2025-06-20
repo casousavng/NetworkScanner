@@ -7,6 +7,18 @@
 .app/db/__pycache__/
 .app/extensions/__pycache__/
 .app/static/__pycache__/
+# Ignorar ficheiros de cache do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+# Ignorar ficheiros de cache do Flask
+instance/
+*.db
+*.sqlite3
+
+# Ignorar ficheiros do macOS
+.DS_Store
 
 # Ignorar o ficheiro rede.db dentro da pasta data
 data/rede.db

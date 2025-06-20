@@ -226,6 +226,7 @@ def init_app(app):
     # A resposta inclui uma lista de dispositivos com portas abertas, o IP selecionado pelo utilizador,
     # a resposta da IA e uma mensagem de resposta, se aplicável
     @app.route('/ai_assist', methods=['GET', 'POST'])
+    @login_required
     def ai_assist():
         db = get_db()
         cur = db.cursor()
@@ -309,17 +310,15 @@ def init_app(app):
 
     # Rota para a página de sobre
     # Exibe informações sobre a aplicação, como versão, autor e descrição
-    # A rota é protegida por login_required para garantir que apenas utilizadores autenticados possam acessar
     # A função renderiza o template about.html, que exibe as informações sobre a aplicação
     # A rota usa o decorator login_required para garantir que apenas utilizadores autenticados possam acessar
     @app.route('/about')
-    @login_required
     def about():
         return render_template('about.html')
 
     # Rota para a página de ajuda
     # Exibe informações de ajuda sobre como usar a aplicação
-    # A rota é protegida por login_required para garantir que apenas utilizadores autenticados possam acessar
+
     # A função renderiza o template help.html, que exibe as informações de ajuda
     # A rota usa o decorator login_required para garantir que apenas utilizadores autenticados possam acessar
     @app.route('/help')
@@ -332,44 +331,31 @@ def init_app(app):
     # A rota é protegida por login_required para garantir que apenas utilizadores autenticados possam acessar
     # A função renderiza o template report_issue.html, que exibe o formulário de reportar problema
     # A rota usa o decorator login_required para garantir que apenas utilizadores autenticados possam acessar
-    
-    # @app.route('/report-issue')
-    # @login_required
-    # def report_issue():
-    #     return render_template('report_issue.html')
-    
-
-    load_dotenv()  # carrega as variáveis do .env
-
-    app.secret_key = os.getenv('SECRET_KEY')
-
-    # Configurações Mail
-    app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
-    mail_port = os.getenv('MAIL_PORT')
-    app.config['MAIL_PORT'] = int(mail_port) if mail_port is not None else 587  # Default to 587 if not set
-    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-    app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
-    app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL') == 'True'
-
-    init_mail(app)
-
-    # Rota para reportar problemas
     @app.route('/report', methods=['GET', 'POST'])
+    @login_required
     def report_issue():
         if request.method == 'POST':
-            issue_text = request.form.get('issue')
-            if not issue_text:
-                flash('Por favor, descreva o problema antes de enviar.', 'warning')
+            name = request.form.get('name', '').strip()
+            email = request.form.get('email', '').strip()
+            issue_text = request.form.get('issue', '').strip()
+
+            if not name or not email or not issue_text:
+                flash('Por favor, preencha todos os campos antes de enviar.', 'warning')
                 return redirect(url_for('report_issue'))
 
-            send_issue_report(issue_text, "report@networkscanner.com")
+            # Monta a mensagem para o email
+            message = f"Nome: {name}\nEmail: {email}\n\nProblema reportado:\n{issue_text}"
+
+            send_issue_report(message, "report@networkscanner.com")
             flash('Obrigado por reportar o problema. Entraremos em contacto em breve.', 'success')
             return redirect(url_for('thank_you'))
 
         return render_template('report_issue.html')  # Teu formulário
 
+    # Rota para a página de agradecimento
+    # Exibe uma mensagem de agradecimento após o utilizador reportar um problema
     @app.route('/thankyou')
+    @login_required
     def thank_you():
         return render_template('thankyou.html')
 
