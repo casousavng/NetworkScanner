@@ -75,7 +75,7 @@ def init_app(app):
                 port_range = "1-65535"
             
             # Chamar o scan com o IP ou range definido
-            print(f"IP Range para scan: {ip_range}")
+            # print(f"IP Range para scan: {ip_range}")
             scan_and_store([ip_range], port_range)  # Passa como lista para a função
 
         return redirect(url_for('index'))  # Redireciona para a página inicial após o scan
@@ -366,13 +366,36 @@ def init_app(app):
     # A consulta SQL é feita para obter todos os scans ordenados pela data mais recente
     # Os dados são passados para o template history.html, que renderiza uma tabela com os scans
     # A função usa o decorator login_required para garantir que apenas utilizadores autenticados
-    # possam acessar o histórico de scans
+    # possam acessar o histórico de scans    
     @app.route('/history')
     @login_required
     def history():
-        db = get_db(); cur = db.cursor()
+        db = get_db()
+        cur = db.cursor()
         cur.execute("SELECT * FROM scans ORDER BY ts DESC")
-        return render_template('history.html', scans=cur.fetchall())
+        scans = cur.fetchall()
+
+        # Buscar estatísticas já guardadas
+        ids = [scan["id"] for scan in scans]
+        scan_stats = []
+        for scan in scans:
+            cur.execute("SELECT * FROM scans WHERE id=?", (scan["id"],))
+            stats = cur.fetchone()
+            if stats:
+                scan_stats.append(dict(stats))
+            else:
+                # Se não existir, podes calcular ou deixar vazio
+                scan_stats.append({
+                    "id": scan["id"],
+                    "ts": scan["ts"],
+                    "n_ips": 0,
+                    "n_ports": 0,
+                    "n_open_ports": 0,
+                    "n_cves": 0,
+                    "n_edbs": 0
+                })
+
+        return render_template('history.html', scans=scans, scan_stats=scan_stats)
     
     # Rota para exportar os dispositivos em formato CSV
     # A rota é protegida por login_required para garantir que apenas utilizadores autenticados possam acessar

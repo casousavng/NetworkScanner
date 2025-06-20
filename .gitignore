@@ -1,6 +1,7 @@
 # Ignorar o ficheiro .env
 .env
 .venv/
+venv
 .data/
 .app/_pycache__/
 .app/__pycache__/
@@ -12,6 +13,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
 # Ignorar ficheiros de cache do Flask
 instance/
 *.db
@@ -19,6 +21,13 @@ instance/
 
 # Ignorar ficheiros do macOS
 .DS_Store
+# Ignorar ficheiros de log
+*.log
+# Ignorar ficheiros de configuração do VS Code
+.vscode/
+# Ignorar ficheiros de configuração do PyCharm
+.idea/
+# Ignorar ficheiros de configuração do Jupyter Notebook
 
 # Ignorar o ficheiro rede.db dentro da pasta data
 data/rede.db

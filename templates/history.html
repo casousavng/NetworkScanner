@@ -1,13 +1,58 @@
 {% extends "base.html" %}
 {% block body %}
 <div class="container mt-4">
-<h3>Histórico de Scans</h3>
-<table class="table table-striped">
-  <thead><tr><th>ID</th><th>Timestamp</th></tr></thead>
-  <tbody>
-    {% for s in scans %}
-      <tr><td>{{ s.id }}</td><td>{{ s.ts }}</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+  <h3>Histórico de Scans</h3>
+
+  {% if scan_stats %}
+    <!-- Campo de pesquisa -->
+    <div class="mb-3">
+      <input type="text" id="searchInput" class="form-control" placeholder="Pesquisar por Scan ID ou Timestamp...">
+    </div>
+
+    <!-- Tabela -->
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover align-middle text-center" id="scanTable">
+        <thead class="table-light">
+          <tr>
+            <th>Scan ID</th>
+            <th>Timestamp</th>
+            <th>IPs distintos</th>
+            <th>Total de Portas</th>
+            <th>Portas abertas</th>
+            <th>CVEs</th>
+            <th>Exploits EDB</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for scan in scan_stats %}
+            <tr>
+              <td>{{ scan.id }}</td>
+              <td>{{ scan.ts }}</td>
+              <td>{{ scan.n_ips }}</td>
+              <td>{{ scan.n_ports }}</td>
+              <td>{{ scan.n_open_ports }}</td>
+              <td>{{ scan.n_cves }}</td>
+              <td>{{ scan.n_edbs }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-muted">Nenhum histórico de scans encontrado.</p>
+  {% endif %}
+</div>
+
+<!-- Script para pesquisa dinâmica -->
+<script>
+  document.getElementById('searchInput').addEventListener('input', function () {
+    const search = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#scanTable tbody tr');
+
+    rows.forEach(row => {
+      const text = row.innerText.toLowerCase();
+      row.style.display = text.includes(search) ? '' : 'none';
+    });
+  });
+</script>
 {% endblock %}

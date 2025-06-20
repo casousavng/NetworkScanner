@@ -47,6 +47,7 @@ def scan_and_store(active_ips, port_range):
     db.commit()
 
     print("⚡ Iniciando varredura")
+    print(f"🌐 IPs ativos: {active_ips}")
 
     # Atualiza os scripts do Nmap
     print("🔄 Atualizando base de dados de scripts do Nmap...")
@@ -75,7 +76,7 @@ def scan_and_store(active_ips, port_range):
         roots = [r for r in exe.map(_scan_ip, active_ips) if r is not None]
 
     # Cria novo scan na tabela scans
-    cur.execute("INSERT INTO scans DEFAULT VALUES")
+    cur.execute("INSERT INTO scans (ts) VALUES (CURRENT_TIMESTAMP)")
     scan_id = cur.lastrowid
     print(f"📥 Novo registo criado em 'scans' (ID: {scan_id})")
 
@@ -259,9 +260,79 @@ def scan_and_store(active_ips, port_range):
                     "Detectado na descrição da vulnerabilidade",
                     url
                 ))
+    
+    def save_scan_stats(scan_id, ts, active_ips, port_range):
+        cur = db.cursor()
 
+        # Função para expandir IPs de intervalos tipo '192.168.1.108-110'
+        def expand_ip_range(ip_range_str):
+            if '-' not in ip_range_str:
+                return [ip_range_str]  # IP único
+            base, range_part = ip_range_str.rsplit('.', 1)
+            start, end = map(int, range_part.split('-'))
+            return [f"{base}.{i}" for i in range(start, end + 1)]
+
+        # Conta o número real de IPs com base em active_ips
+        def count_ips(active_ips_list):
+            total = 0
+            for ip_entry in active_ips_list:
+                if '-' in ip_entry:
+                    base, range_part = ip_entry.rsplit('.', 1)
+                    try:
+                        start, end = map(int, range_part.split('-'))
+                        if end >= start:
+                            total += (end - start + 1)
+                    except ValueError:
+                        pass  # ignora entradas inválidas
+                else:
+                    total += 1
+            return total
+
+        n_ips = count_ips(active_ips)
+
+        # Número de portas abertas
+        cur.execute("SELECT COUNT(*) AS n_open_ports FROM ports WHERE scan_id=? AND state='open'", (scan_id,))
+        n_open_ports = cur.fetchone()["n_open_ports"] or 0
+
+        # Número de CVEs
+        cur.execute("""
+            SELECT COUNT(DISTINCT cve_id) AS n_cves
+            FROM cves
+            WHERE port_id IN (SELECT id FROM ports WHERE scan_id=?)
+        """, (scan_id,))
+        n_cves = cur.fetchone()["n_cves"] or 0
+
+        # Número de EDBs
+        cur.execute("""
+            SELECT COUNT(DISTINCT ebd_id) AS n_edbs
+            FROM edbs
+            WHERE vulnerability_id IN (
+                SELECT id FROM vulnerabilities WHERE port_id IN (SELECT id FROM ports WHERE scan_id=?)
+            ) AND ebd_id IS NOT NULL
+        """, (scan_id,))
+        n_edbs = cur.fetchone()["n_edbs"] or 0
+
+        # Número de portas no intervalo
+        if "-" in port_range:
+            try:
+                start, end = map(int, port_range.split("-"))
+                n_ports = end - start + 1 if end >= start else 0
+            except ValueError:
+                n_ports = 0
+        else:
+            n_ports = 1
+
+        # Guarda estatísticas na base de dados
+        cur.execute("""
+            INSERT OR REPLACE INTO scans (ts, n_ips, n_ports, n_open_ports, n_cves, n_edbs)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (ts, n_ips, n_ports, n_open_ports, n_cves, n_edbs))
+        db.commit()
+        
     extract_cves_from_description()
     extract_ebds_from_description()
+    save_scan_stats(scan_id, time.strftime('%Y-%m-%d %H:%M:%S'), active_ips, port_range)
+
     # Atualiza o status do scan
     cur.execute("UPDATE scan_status SET end_time = CURRENT_TIMESTAMP WHERE end_time IS NULL;")
     db.commit()

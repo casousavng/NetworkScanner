@@ -95,6 +95,7 @@ scanRangeRadio.addEventListener('change', () => {
   form.addEventListener('submit', function (event) {
     // Evita múltiplos envios
     submitBtn.disabled = true;
+    
     // Tenta desativar os botões na navbar
     setTimeout(function() {
       const btnIds = [
@@ -108,6 +109,15 @@ scanRangeRadio.addEventListener('change', () => {
           btn.classList.add('nav-btn-disabled');
 
         }
+        // Desativa os radio buttons de tipo de scan
+        const radios = document.querySelectorAll('input[name="scan_type"]');
+        radios.forEach(radio => {
+          radio.disabled = true;
+        });
+        document.querySelector('input[name="port_range"]').disabled = true;
+        document.getElementById('ip_range').disabled = true;
+        document.getElementById('ip_start').disabled = true;
+        document.getElementById('ip_end').disabled = true;
       });
     }, 0);
 

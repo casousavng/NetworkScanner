@@ -1,14 +1,37 @@
 {% extends "base.html" %}
 {% block body %}
 <div class="container mt-4">
-  <h3>Ajuda</h3>
-  <p>Esta aplicação permite analisar a rede, identificar dispositivos, portas e vulnerabilidades.</p>
+  <h3>Ajuda e Documentação</h3>
+  <p>Bem-vindo à aplicação de Análise e Gestão de Redes. Esta ferramenta foi desenvolvida para facilitar a monitorização, análise e gestão de redes locais, identificando dispositivos, portas abertas, vulnerabilidades e fornecendo relatórios detalhados.</p>
+  
+  <h4>Funcionalidades Principais</h4>
   <ul>
-    <li><b>Mapa:</b> Visualize a topologia da rede.</li>
-    <li><b>Dispositivos:</b> Veja todos os dispositivos encontrados.</li>
-    <li><b>Histórico:</b> Consulte scans anteriores.</li>
-    <li><b>AI Assist:</b> Obtenha sugestões automáticas.</li>
+    <li><b>Mapa da Rede:</b> Visualize a topologia da rede em tempo real, com representação gráfica dos dispositivos conectados e suas ligações.</li>
+    <li><b>Portas e Serviços:</b> Veja as portas abertas em cada dispositivo, os serviços associados e possíveis vulnerabilidades conhecidas.</li>
+    <li><b>Dispositivos:</b> Lista detalhada de todos os dispositivos encontrados na rede, incluindo endereço IP, MAC, fabricante, sistema operativo e estado atual.</li>
+    <li><b>Pesquisa e Filtros:</b> Utilize a barra de pesquisa e filtros para encontrar rapidamente dispositivos e exporte relatórios em vários formatos (Simples, Completo).</li>
+    <li><b>Histórico de Scans:</b> Consulte os resultados de análises anteriores.</li>
+    <li><b>AI Assist:</b> Receba sugestões automáticas para mitigação de riscos, recomendações de segurança e explicações sobre vulnerabilidades encontradas em determinado IP.</li>
+    <li><b>Report:</b>  Reporte alguma anomalia ou vulnerabilidade encontrada.</li>
   </ul>
-  <p>Para mais informações, contacte o administrador.</p>
+
+  <h4>Como Utilizar</h4>
+  <ol>
+    <li>Aceda ao painel principal após login.</li>
+    <li>Inicie um novo scan de rede através do botão <b>“Iniciar Scan”</b>.</li>
+    <li>Aguarde a conclusão do processo e visualize o mapa da rede atualizado.</li>
+    <li>Clique em qualquer dispositivo para ver detalhes, portas abertas e vulnerabilidades.</li>
+    <li>Consulte o histórico para comparar resultados e exportar relatórios.</li>
+    <li>Use o AI Assist para obter recomendações automáticas.</li>
+  </ol>
+
+  <h4>Perguntas Frequentes</h4>
+  <ul>
+    <li><b>Como exportar um relatório?</b> No separador Dispositivos, selecione o tipo de exportação e escolha “Exportar CSV Simples ou Completo”.</li>
+    <li><b>O que fazer se encontrar uma vulnerabilidade?</b> Consulte as recomendações do AI Assist e siga as melhores práticas de segurança.</li>
+  </ul>
+
+  <h4>Suporte</h4>
+  <p>Para mais informações ou suporte técnico, contacte o administrador do sistema atraves do separador Reportar Problema.</a>.</p>
 </div>
 {% endblock %}
