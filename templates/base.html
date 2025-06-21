@@ -8,46 +8,53 @@
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/network_icon.png') }}">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.5.0/dist/socket.io.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <div class="sidebar shadow d-flex flex-column" style="height: 100vh;">
-    <h5>Menu</h5>
-    <ul class="nav flex-column flex-grow-1">
-      <li class="nav-item"><a class="nav-link menu-link" id="mapa" href="{{ url_for('index') }}"><i class="bi bi-diagram-3"></i> Mapa</a></li>
-      <li class="nav-item"><a class="nav-link menu-link" id="scan" href="{{ url_for('new_scan') }}"><i class="bi bi-broadcast-pin"></i> Iniciar Scan</a></li>
-      <li class="nav-item"><a class="nav-link menu-link" id="dispositivos" href="{{ url_for('list_devices') }}"><i class="bi bi-hdd-network"></i> Dispositivos</a></li>
-      <li class="nav-item"><a class="nav-link menu-link" id="historico" href="{{ url_for('history') }}"><i class="bi bi-clock-history"></i> Histórico</a></li>
-      <li class="nav-item"><a class="nav-link menu-link" id="relatorios" href="{{ url_for('reports') }}"><i class="bi bi-bar-chart-line"></i> Relatórios</a></li>
-      <li class="nav-item"><a class="nav-link menu-link" id="assistenteIA" href="{{ url_for('ai_assist') }}"><i class="bi bi-robot"></i> Assistente IA</a></li>
-      <li class="nav-item"><a class="nav-link menu-link" id="ajuda" href="{{ url_for('help') }}"><i class="bi bi-question-circle"></i> Ajuda</a></li>
-      <li class="nav-item"><a class="nav-link menu-link" id="sobre" href="{{ url_for('about') }}"><i class="bi bi-info-circle"></i> Sobre</a></li>
-      <li class="nav-item"><a class="nav-link menu-link" id="reportarProblema" href="{{ url_for('report_issue') }}"><i class="bi bi-bug"></i> Reportar Problema</a></li>
-      <li><hr></li>
-      <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-      <li class="nav-item"><a class="nav-link" href="#" onclick="fecharApp()"><i class="bi bi-x-circle"></i> Sair</a></li>
-      <li><hr></li>
-      <li class="nav-item mt-2">
-        <button class="btn btn-outline-primary w-100" id="fullscreenBtn" onclick="toggleFullScreen()">
-          <i class="bi bi-arrows-fullscreen"></i> Tela cheia
-        </button>
-      </li>
-      <li><hr></li>
-    </ul>
-    <span class="nav-link disabled mt-auto mb-1" style="font-size: 0.9em;">
-      <strong>IP atual:</strong> {{ network.addr }}<br>
-      <strong>IP router:</strong> {{ router_ip }}
-      <strong>Máscara:</strong> {{ network.netmask }}
-      <strong>Broadcast:</strong> {{ network.broadcast }}
-    </span>
-  </div>
-  <div class="content">
-    {% block body %}{% endblock %}
-    <div id="detail" class="detail-panel"></div>
+  <div id="app-container">
+    <div class="sidebar shadow d-flex flex-column" id="sidebar">
+      <h5><span><i class="bi bi-list"></i> Menu</span></h5>
+      <ul class="nav flex-column flex-grow-1">
+        <li class="nav-item"><a class="nav-link menu-link" id="mapa" href="{{ url_for('index') }}"><i class="bi bi-diagram-3"></i> Mapa</a></li>
+        <li class="nav-item"><a class="nav-link menu-link" id="scan" href="{{ url_for('new_scan') }}"><i class="bi bi-broadcast-pin"></i> Iniciar Scan</a></li>
+        <li class="nav-item"><a class="nav-link menu-link" id="dispositivos" href="{{ url_for('list_devices') }}"><i class="bi bi-hdd-network"></i> Dispositivos</a></li>
+        <li class="nav-item"><a class="nav-link menu-link" id="historico" href="{{ url_for('history') }}"><i class="bi bi-clock-history"></i> Histórico</a></li>
+        <li class="nav-item"><a class="nav-link menu-link" id="relatorios" href="{{ url_for('reports') }}"><i class="bi bi-bar-chart-line"></i> Relatórios</a></li>
+        <li class="nav-item"><a class="nav-link menu-link" id="assistenteIA" href="{{ url_for('ai_assist') }}"><i class="bi bi-robot"></i> Assistente IA</a></li>
+        <li class="nav-item"><a class="nav-link menu-link" id="ajuda" href="{{ url_for('help') }}"><i class="bi bi-question-circle"></i> Ajuda</a></li>
+        <li class="nav-item"><a class="nav-link menu-link" id="sobre" href="{{ url_for('about') }}"><i class="bi bi-info-circle"></i> Sobre</a></li>
+        <li class="nav-item"><a class="nav-link menu-link" id="reportarProblema" href="{{ url_for('report_issue') }}"><i class="bi bi-bug"></i> Reportar Problema</a></li>
+        <li><hr></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" onclick="fecharApp()"><i class="bi bi-x-circle"></i> Sair</a></li>
+        <li><hr></li>
+        <li class="nav-item mt-2">
+          <button class="btn btn-outline-primary w-100" id="fullscreenBtn" onclick="toggleFullScreen()">
+            <i class="bi bi-arrows-fullscreen"></i> Tela cheia
+          </button>
+        </li>
+        <li><hr></li>
+      </ul>
+      <span class="nav-link disabled mt-auto mb-1" style="font-size: 0.8em; color: #2c3e50;">
+        <strong><i class="bi bi-laptop"></i> IP:</strong> {{ network.addr }}<br>
+        <strong><i class="bi bi-router"></i> Router:</strong> {{ router_ip }}<br>
+        <strong><i class="bi bi-diagram-3"></i> Máscara:</strong> {{ network.netmask }}<br>
+        <strong><i class="bi bi-broadcast"></i> Broadcast:</strong> {{ network.broadcast }}
+      </span>
+    </div>
+
+    <!-- Botão toggle fora da sidebar -->
+    <button id="toggleSidebarBtn" title="Mostrar/Ocultar menu">
+      <i class="bi bi-chevron-left"></i>
+    </button>
+
+    <div class="content">
+      {% block body %}{% endblock %}
+      <div id="detail" class="detail-panel"></div>
+    </div>
   </div>
 
   <!-- Spinner de carregamento -->
@@ -62,141 +69,149 @@
   <script src="{{ url_for('static', filename='app.js') }}"></script>
 
   <script>
+    // Toggle sidebar open/close
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('toggleSidebarBtn');
+    const icon = toggleBtn.querySelector('i');
+
+    toggleBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+
+      if (sidebar.classList.contains('collapsed')) {
+        icon.classList.remove('bi-chevron-left');
+        icon.classList.add('bi-chevron-right');
+      } else {
+        icon.classList.remove('bi-chevron-right');
+        icon.classList.add('bi-chevron-left');
+      }
+    });
+
     let isScanning = false;
-  
+
     function showSpinner() {
       document.getElementById('loadingSpinner').style.display = 'flex';
     }
-  
+
     function hideSpinner() {
       document.getElementById('loadingSpinner').style.display = 'none';
     }
-  
-    document.getElementById('startScanBtn').addEventListener('click', function(e) {
+
+    document.getElementById('startScanBtn')?.addEventListener('click', function(e) {
       if (isScanning) return;
-  
+
       e.preventDefault();
-  
+
       const isOnHomePage = window.location.pathname === '/';
-  
+
       if (!isOnHomePage) {
-        // Guarda a flag no localStorage para iniciar o scan ao chegar à página inicial
         localStorage.setItem('startScanOnLoad', 'true');
         window.location.href = '/';
         return;
       }
-  
+
       iniciarScan();
     });
-  
+
     function iniciarScan() {
       isScanning = true;
       showSpinner();
-  
       // Desativa todos os links do menu
       document.querySelectorAll('.menu-link').forEach(link => {
         link.classList.add('disabled-link');
       });
-  
+
       fetch('/scan')
         .then(response => response.json())
         .then(data => {
           hideSpinner();
           isScanning = false;
-  
+
           document.querySelectorAll('.menu-link').forEach(link => {
             link.classList.remove('disabled-link');
           });
-  
+
           window.location.href = '/';
         })
         .catch(error => {
           hideSpinner();
           isScanning = false;
-  
+
           document.querySelectorAll('.menu-link').forEach(link => {
             link.classList.remove('disabled-link');
           });
-  
+
           console.error('Erro ao iniciar o scan:', error);
         });
     }
 
-  // Função para fechar o aplicativo
-  // Envia uma requisição para o servidor para fechar o aplicativo
-  // e tenta fechar a janela webview
-  function fecharApp() {
-    fetch('/shutdown', { method: 'POST' })
-      .then(response => {
-        if (response.ok) {
-          window.close();  // Tenta fechar a janela WebView
-        } else {
-          console.error('Erro ao tentar fechar a aplicação');
+    function fecharApp() {
+      fetch('/shutdown', { method: 'POST' })
+        .then(response => {
+          if (response.ok) {
+            window.close();
+          } else {
+            console.error('Erro ao tentar fechar a aplicação');
+          }
+        });
+    }
+
+    function toggleFullScreen() {
+      const btn = document.getElementById('fullscreenBtn');
+      const iconFull = '<i class="bi bi-arrows-fullscreen"></i> Tela cheia';
+      const iconExit = '<i class="bi bi-arrows-fullscreen"></i> Sair da tela cheia';
+
+      if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+        const docElm = document.documentElement;
+        if (docElm.requestFullscreen) {
+          docElm.requestFullscreen();
+        } else if (docElm.webkitRequestFullscreen) {
+          docElm.webkitRequestFullscreen();
+        } else if (docElm.mozRequestFullScreen) {
+          docElm.mozRequestFullScreen();
+        } else if (docElm.msRequestFullscreen) {
+          docElm.msRequestFullscreen();
         }
-      });
-  }
-
-function toggleFullScreen() {
-  const btn = document.getElementById('fullscreenBtn');
-  const iconFull = '<i class="bi bi-arrows-fullscreen"></i> Tela cheia';
-  const iconExit = '<i class="bi bi-arrows-fullscreen"></i> Sair da tela cheia';
-
-  if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
-    // Entra em tela cheia
-    const docElm = document.documentElement;
-    if (docElm.requestFullscreen) {
-      docElm.requestFullscreen();
-    } else if (docElm.webkitRequestFullscreen) { // Safari
-      docElm.webkitRequestFullscreen();
-    } else if (docElm.mozRequestFullScreen) { // Firefox
-      docElm.mozRequestFullScreen();
-    } else if (docElm.msRequestFullscreen) { // IE/Edge
-      docElm.msRequestFullscreen();
-    }
-    btn.innerHTML = iconExit;
-    localStorage.setItem('fullscreen', 'true'); // Save preference
-  } else {
-    // Sai de tela cheia
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) { // Safari
-      document.webkitExitFullscreen();
-    } else if (document.mozCancelFullScreen) { // Firefox
-      document.mozCancelFullScreen();
-    } else if (document.msExitFullscreen) { // IE/Edge
-      document.msExitFullscreen();
-    }
-    btn.innerHTML = iconFull;
-    localStorage.removeItem('fullscreen'); // Remove preference
-  }
-}
-
-// On page load, restore fullscreen if user had it enabled
-window.addEventListener('load', function() {
-  const btn = document.getElementById('fullscreenBtn');
-  const iconExit = '<i class="bi bi-arrows-fullscreen"></i> Sair da tela cheia';
-  if (localStorage.getItem('fullscreen') === 'true') {
-    const docElm = document.documentElement;
-    if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
-      if (docElm.requestFullscreen) {
-        docElm.requestFullscreen();
-      } else if (docElm.webkitRequestFullscreen) {
-        docElm.webkitRequestFullscreen();
-      } else if (docElm.mozRequestFullScreen) {
-        docElm.mozRequestFullScreen();
-      } else if (docElm.msRequestFullscreen) {
-        docElm.msRequestFullscreen();
+        btn.innerHTML = iconExit;
+        localStorage.setItem('fullscreen', 'true');
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+          document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+        btn.innerHTML = iconFull;
+        localStorage.removeItem('fullscreen');
       }
-      if (btn) btn.innerHTML = iconExit;
     }
-  }
-});
-  
-    // Verifica se deve iniciar scan automaticamente ao carregar a página inicial
+
+    window.addEventListener('load', function() {
+      const btn = document.getElementById('fullscreenBtn');
+      const iconExit = '<i class="bi bi-arrows-fullscreen"></i> Sair da tela cheia';
+      if (localStorage.getItem('fullscreen') === 'true') {
+        const docElm = document.documentElement;
+        if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+          if (docElm.requestFullscreen) {
+            docElm.requestFullscreen();
+          } else if (docElm.webkitRequestFullscreen) {
+            docElm.webkitRequestFullscreen();
+          } else if (docElm.mozRequestFullScreen) {
+            docElm.mozRequestFullScreen();
+          } else if (docElm.msRequestFullscreen) {
+            docElm.msRequestFullscreen();
+          }
+          if (btn) btn.innerHTML = iconExit;
+        }
+      }
+    });
+
     window.addEventListener('load', () => {
       const shouldStartScan = localStorage.getItem('startScanOnLoad') === 'true';
       const isOnHomePage = window.location.pathname === '/';
-  
+
       if (shouldStartScan && isOnHomePage) {
         localStorage.removeItem('startScanOnLoad');
         iniciarScan();
