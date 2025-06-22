@@ -392,6 +392,7 @@ def init_app(app):
                 scan_stats.append({
                     "id": scan["id"],
                     "ts": scan["ts"],
+                    "duration": scan["duration"],
                     "n_ips": 0,
                     "n_ports": 0,
                     "n_open_ports": 0,

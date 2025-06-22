@@ -337,5 +337,12 @@ def scan_and_store(active_ips, port_range):
     # Atualiza o status do scan
     cur.execute("UPDATE scan_status SET end_time = CURRENT_TIMESTAMP WHERE end_time IS NULL;")
     db.commit()
+    
+    # Mostra o tempo decorrido e atualiza a duração do scan na tabela scans
     elapsed = round(time.time() - start_time, 2)
-    print(f"✅ Varredura finalizada em {elapsed} segundos")
+    hours, rem = divmod(int(elapsed), 3600)
+    minutes, seconds = divmod(rem, 60)
+    duration_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+    print(f"✅ Varredura finalizada em {hours} horas, {minutes} minutos e {seconds} segundos")
+    cur.execute("UPDATE scans SET duration = ? WHERE id = ?", (duration_str, scan_id))
+    db.commit()

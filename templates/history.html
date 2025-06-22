@@ -18,6 +18,7 @@
         <tr>
           <th>Scan ID</th>
           <th>Timestamp</th>
+          <th>Duração</th>
           <th>IPs distintos</th>
           <th>Total de Portas</th>
           <th>Portas abertas</th>
@@ -30,6 +31,7 @@
         <tr>
           <td>{{ scan.id }}</td>
           <td>{{ scan.ts }}</td>
+          <td>{{ scan.duration }}</td>
           <td>{{ scan.n_ips }}</td>
           <td>{{ scan.n_ports }}</td>
           <td>{{ scan.n_open_ports }}</td>
