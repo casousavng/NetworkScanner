@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from .db import get_db
 import re
 import netifaces
+import ipaddress
 
 # Função para obter o gateway padrão da máquina
 # Utiliza a biblioteca netifaces para obter as rotas de rede e extrai o gateway padrão
@@ -276,7 +277,15 @@ def scan_and_store(active_ips, port_range):
         def count_ips(active_ips_list):
             total = 0
             for ip_entry in active_ips_list:
-                if '-' in ip_entry:
+                ip_entry = ip_entry.strip()
+                # Verifica se é um range CIDR (ex: 192.168.1.0/24)
+                if '/' in ip_entry:
+                    try:
+                        net = ipaddress.ip_network(ip_entry, strict=False)
+                        total += net.num_addresses
+                    except ValueError:
+                        pass  # ignora entradas inválidas
+                elif '-' in ip_entry:
                     base, range_part = ip_entry.rsplit('.', 1)
                     try:
                         start, end = map(int, range_part.split('-'))
