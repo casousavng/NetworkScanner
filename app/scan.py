@@ -8,6 +8,7 @@ from .db import get_db
 import re
 import netifaces
 import ipaddress
+from .mail import send_scan_start_email, send_scan_completed_email
 
 # Função para obter o gateway padrão da máquina
 # Utiliza a biblioteca netifaces para obter as rotas de rede e extrai o gateway padrão
@@ -49,6 +50,9 @@ def scan_and_store(active_ips, port_range):
 
     print("⚡ Iniciando varredura")
     print(f"🌐 IPs ativos: {active_ips}")
+
+    # Envia email a indicar o início do scan
+    send_scan_start_email("scan@networkscanner.com", {"ips": active_ips, "port_range": port_range})
 
     # Atualiza os scripts do Nmap
     print("🔄 Atualizando base de dados de scripts do Nmap...")
@@ -353,5 +357,14 @@ def scan_and_store(active_ips, port_range):
     minutes, seconds = divmod(rem, 60)
     duration_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
     print(f"✅ Varredura finalizada em {hours} horas, {minutes} minutos e {seconds} segundos")
+
+    send_scan_completed_email("scan@networkscanner.com", {
+        "ips": active_ips,
+        "port_range": port_range,
+        "scan_id": scan_id,
+        "duration": duration_str,
+        "n_ips": len(active_ips)
+    })
+
     cur.execute("UPDATE scans SET duration = ? WHERE id = ?", (duration_str, scan_id))
     db.commit()
