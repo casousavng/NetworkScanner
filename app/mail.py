@@ -120,7 +120,7 @@ def send_scan_start_email(recipient_email, scan_params):
     <h2 style="color: #2980b9;">🚀 Scan Iniciado</h2>
     <p><strong>Intervalo de Portas:</strong> {port_range} ({port_text})</p>
     <p><strong>IPs a analisar:</strong> {ip_text}</p>
-    <h4>Lista de IPs:</h4>
+    <h4>Lista ou Intervalo de IPs:</h4>
     <ul>
         {ip_list_html}
     </ul>
@@ -169,7 +169,7 @@ def send_scan_completed_email(recipient_email, data):
     <p><strong>Duração:</strong> {duration}</p>
     <p><strong>Intervalo de Portas:</strong> {port_range} ({port_text})</p>
     <p><strong>IPs Ativos Encontrados:</strong> {ip_text}</p>
-    <h4>Lista de IPs:</h4>
+    <h4>Lista ou Intervalo de IPs:</h4>
     <ul>
         {ip_list_html}
     </ul>
