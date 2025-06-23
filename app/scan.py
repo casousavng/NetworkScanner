@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 import requests
 import time
 from concurrent.futures import ThreadPoolExecutor
-from .db import get_db
+from .db import get_db, backup_db
 import re
 import netifaces
 import ipaddress
@@ -368,3 +368,7 @@ def scan_and_store(active_ips, port_range):
 
     cur.execute("UPDATE scans SET duration = ? WHERE id = ?", (duration_str, scan_id))
     db.commit()
+
+    # Realiza backup da base de dados a cada scan
+    print("🔄 Realizando backup da base de dados...")
+    backup_db(get_default_gateway())
