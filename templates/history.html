@@ -19,8 +19,14 @@
           <th>Scan ID</th>
           <th>Timestamp</th>
           <th>Duração</th>
-          <th>IPs distintos</th>
-          <th>Total de Portas</th>
+          <th>
+            IPs distintos
+            <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Número total de IPs que foram incluídos no scan, podendo corresponder à rede inteira ou apenas alguns IPs específicos."></i>
+          </th>
+          <th>
+            Total de Portas
+            <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Total de portas que foram analisadas no scan. Pode incluir todas as portas (1-65535), um intervalo ou apenas algumas específicas."></i>
+          </th>
           <th>Portas abertas</th>
           <th>CVEs</th>
           <th>Exploits EDB</th>
@@ -50,6 +56,15 @@
 
 <!-- Script para pesquisa dinâmica e paginação -->
 <script>
+
+document.addEventListener('DOMContentLoaded', function () {
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+});
+
+
 document.getElementById('searchInput').addEventListener('input', function () {
   filterTable();
   paginate();

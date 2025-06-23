@@ -9,7 +9,9 @@
     Utilize este assistente para analisar cada um dos IPs dos seus dispositivos na rede e obter respostas e mitigações para potenciais vulnerabilidades.
   </p>
   <p>
-    <strong>Nota:</strong> A análise é feita apenas em IPs com portas abertas detetadas. Se um IP não tiver portas abertas, não será apresentado.
+    <small>
+      <strong>Nota:</strong> A análise é feita apenas em dispositivos com portas abertas detetadas. Se um dispositivo não tiver portas abertas, não será apresentado.
+    </small>
   </p>
 
   <form method="POST" class="row g-2 align-items-end mb-3" id="form-analisar">
@@ -48,7 +50,7 @@
       <div class="card-header bg-light">
         <h5 class="mb-0">Resposta da IA</h5>
       </div>
-      <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+      <div class="card-body" style="max-height: 565px; overflow-y: auto;">
         <div class="resposta-ia markdown-body">
           {{ resposta_ia | safe }}
           {{ resposta | safe }}
