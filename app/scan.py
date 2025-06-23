@@ -63,7 +63,7 @@ def scan_and_store(active_ips, port_range):
         print(f"❌ Erro ao atualizar scripts do Nmap: {e}")
 
     def _scan_ip(ip):
-        print(f"🔬 Escaneando IP: {ip}")
+        print(f"🔬 Varrendo IP: {ip}")
         print(f"🔍 Varredura de portas: {port_range}")
         args = [
             "nmap", "-sS", "-sV", "--script", "vuln", "-T4",

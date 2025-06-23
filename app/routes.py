@@ -76,7 +76,6 @@ def init_app(app):
                 port_range = "1-65535"
             
             # Chamar o scan com o IP ou range definido
-            # print(f"IP Range para scan: {ip_range}")
             scan_and_store([ip_range], port_range)  # Passa como lista para a função
 
         return redirect(url_for('index'))  # Redireciona para a página inicial após o scan

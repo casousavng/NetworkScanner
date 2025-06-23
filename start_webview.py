@@ -62,7 +62,6 @@ if __name__ == '__main__':
         with app.app_context():
             init_db()
 
-
     flask_thread = threading.Thread(target=start_flask)
     flask_thread.daemon = True
     flask_thread.start()

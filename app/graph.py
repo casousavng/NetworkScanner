@@ -6,7 +6,6 @@ from .scan import get_default_gateway
 def build_network_data():
 
     router = get_default_gateway()
-    print(f"IP do router: {router}")
 
     db = get_db()
     cur = db.cursor()
@@ -77,7 +76,6 @@ def build_network_data():
     node_colors = []
     node_sizes = []
 
-    print("\n--- DEBUG: Dados dos nós ---")
     for n in G.nodes():
         node_x.append(pos[n][0])
         node_y.append(pos[n][1])
@@ -87,7 +85,6 @@ def build_network_data():
         if G.nodes[n]["type"] == "router":
             node_colors.append("#0037FF")
             node_sizes.append(50)
-            print(f"{n} (router): cor azul, tamanho 50")
             continue
 
         open_ports = open_ports_by_ip.get(n, 0)
@@ -120,9 +117,6 @@ def build_network_data():
 
         node_colors.append(color)
         node_sizes.append(size)
-
-        print(f"{n} => open_ports: {open_ports}, CVEs: {cves_count}, EDBs: {edbs_count}, total_vuln: {total_vuln}")
-        print(f"Cor escolhida: {color}, tamanho: {size}")
 
     node_trace = go.Scatter(
         x=node_x, y=node_y, text=node_text,
