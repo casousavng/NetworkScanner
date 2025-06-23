@@ -11,32 +11,12 @@ import ipaddress
 from .mail import send_scan_start_email, send_scan_completed_email
 
 # Função para obter o gateway padrão da máquina
-# Utiliza a biblioteca netifaces para obter as rotas de rede e extrai o gateway padrão
-# Retorna o endereço IP do gateway padrão
-# Exemplo de uso: get_default_gateway()
-# Pode ser útil para determinar a rede local ou para configurar o scan de rede
-# Certifique-se de que a biblioteca netifaces está instalada no ambiente Python
-# Você pode instalar com: pip install netifaces
-# A função assume que o gateway padrão está configurado para IPv4 (AF_INET)
-# Se não houver gateway padrão configurado, a função pode gerar um erro
-# É recomendado tratar exceções caso o gateway não esteja disponível ou a rede não esteja configurada
-# A função retorna o endereço IP do gateway padrão como uma string
-# Exemplo de retorno: '192.168.1.1'
 def get_default_gateway():
     gateways = netifaces.gateways()
     default_gateway = gateways['default'][netifaces.AF_INET][0]
     return default_gateway
 
 # Função para escanear e armazenar informações de rede
-# Esta função realiza um scan de rede usando o Nmap e armazena os resultados no banco de dados
-# Recebe uma lista de IPs ativos e um intervalo de portas a serem escaneadas
-# A função atualiza os scripts do Nmap antes de iniciar o scan
-# Utiliza a biblioteca subprocess para executar comandos do Nmap e processar os resultados
-# Os resultados do scan são armazenados em tabelas no banco de dados, incluindo dispositivos, ports, vulnerabilities e cves
-# A função também extrai informações de CVEs e EDBs a partir das descrições das vulnerabilidades
-# O scan é realizado em paralelo usando ThreadPoolExecutor para melhorar a performance
-# A função registra o tempo de início e fim do scan, bem como o tempo total de execução
-# Exemplo de uso: scan_and_store(['192.168.1.1'], '1-1000')
 def scan_and_store(active_ips, port_range):
 
     start_time = time.time()
@@ -227,13 +207,6 @@ def scan_and_store(active_ips, port_range):
                 ))
 
     # Extrai EDBs das descrições das vulnerabilidades
-    # Regex para EDB-ID, CVSS e URL
-    # O regex procura por padrões como "EDB-ID:12345 7.5 https://www.exploit-db.com/exploits/12345"
-    # O EDB-ID é capturado como um grupo, seguido por um número de CVSS e uma URL
-    # A função insere ou atualiza os registros na tabela edbs
-    # Se o EDB-ID já existir para o mesmo port_id, ele atualiza os campos severity, ebds e reference
-    # A descrição é definida como "Detectado na descrição da vulnerabilidade"
-    # A URL é extraída do padrão e armazenada no campo reference_url
     def extract_ebds_from_description():
         cur.execute("SELECT id, description FROM vulnerabilities WHERE description LIKE '%EDB-ID:%'")
         rows = cur.fetchall()

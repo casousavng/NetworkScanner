@@ -26,23 +26,13 @@ from .graph import build_network_data
 
 import plotly
 
-# Função para inicializar as rotas da aplicação Flask
-# Esta função é chamada no início da aplicação para configurar as rotas
-
+# Obtém a rede local e o IP do router (gateway) usando netifaces
 network = netifaces.ifaddresses(netifaces.gateways()['default'][netifaces.AF_INET][1])[netifaces.AF_INET][0]
 gateway = netifaces.gateways()['default'][netifaces.AF_INET][0]
 
 def init_app(app):
 
     # Rota para iniciar o scan
-    # Permite escolher entre scan completo, específico ou intervalo de IPs
-    # Também permite escolher o intervalo de portas a escanear
-    # Após o scan, redireciona para a página inicial
-    # e atualiza o mapa de rede com os novos dados
-    # A rota é protegida por login_required para garantir que apenas utilizadores autenticados possam iniciar scans
-    # A rota aceita tanto GET (para exibir o formulário) quanto POST (para processar o formulário e iniciar o scan)
-    # O scan é feito em background usando a função scan_and_store, que armazena os resultados no banco de dados
-    # A função também atualiza o status do scan na tabela scan_status, que é usada para mostrar o progresso do scan na página inicial
     @app.route('/scan', methods=['GET', 'POST'])
     @login_required
     def do_scan():
@@ -81,14 +71,6 @@ def init_app(app):
         return redirect(url_for('index'))  # Redireciona para a página inicial após o scan
 
     # Rota para a página inicial
-    # Exibe o mapa de rede com os dados mais recentes
-    # Também verifica o status do último scan e exibe o progresso
-    # A rota é protegida por login_required para garantir que apenas utilizadores autenticados possam acessar
-    # A função build_network_data é chamada para construir os dados do gráfico usando Plotly
-    # Os dados do gráfico são convertidos para JSON usando o PlotlyJSONEncoder
-    # O status do scan é verificado na tabela scan_status, e se o último scan ainda estiver em andamento (end_time é None), o progresso é definido como 1 (em andamento), caso contrário, é definido como 0 (concluído)
-    # Os dados do gráfico e o progresso do scan são passados para o template index.html para renderização
-    # A rota também usa o decorator login_required para garantir que apenas utilizadores autenticados possam acessar a página
     @app.route('/')
     @login_required
     def index():
@@ -108,19 +90,6 @@ def init_app(app):
         return render_template('index.html', graphJSON=graphJSON, scan_progress=scan_progress, network=network, router_ip=gateway)
     
     # Rota para a API que retorna informações detalhadas sobre um dispositivo específico
-    # A rota aceita um parâmetro IP e retorna informações sobre o dispositivo, incluindo portas abertas
-    # e vulnerabilidades associadas, no formato JSON
-    # A rota é protegida por login_required para garantir que apenas utilizadores autenticados possam acessar
-    # A função busca informações do dispositivo na tabela devices e suas portas na tabela ports
-    # Para cada porta, busca as CVEs associadas na tabela cves e as vulnerabilidades na tabela vulnerabilities
-    # Também busca os EDBs associados às vulnerabilidades, se existirem
-    # Os dados são organizados em um dicionário e retornados como JSON
-    # Se o dispositivo não for encontrado, retorna um erro 404
-    # A função usa o decorator login_required para garantir que apenas utilizadores autenticados possam acessar
-    # A função get_db é usada para obter a conexão com o banco de dados SQLite
-    # A consulta SQL é feita usando parâmetros para evitar injeção de SQL
-    # A resposta JSON inclui o IP do dispositivo, hostname, MAC, vendor, last_seen
-    # e uma lista de portas com suas informações, incluindo CVEs e EDBs associados
     @app.route('/api/device/<ip>')
     @login_required
     def api_device(ip):
@@ -196,12 +165,6 @@ def init_app(app):
         return jsonify(data)
 
     # Rota para listar todos os dispositivos na base de dados
-    # A rota é protegida por login_required para garantir que apenas utilizadores autenticados possam acessar
-    # A função busca todos os dispositivos na tabela devices e os exibe em um template
-    # A consulta SQL é feita sem parâmetros, retornando todos os dispositivos
-    # Os dados são passados para o template devices.html, que renderiza uma tabela com os dispositivos
-    # A função usa o decorator login_required para garantir que apenas utilizadores autenticados
-    # possam acessar a lista de dispositivos
     @app.route('/devices')
     @login_required
     def list_devices():
@@ -210,21 +173,6 @@ def init_app(app):
         return render_template('devices.html', devices=cur.fetchall(), network=network, router_ip=gateway)
     
     # Rota para a página de assistente de IA
-    # Permite ao utilizador selecionar um dispositivo e obter recomendações de segurança
-    # A rota aceita tanto GET (para exibir o formulário) quanto POST (para processar o formulário e obter recomendações)
-    # A função busca todos os dispositivos na tabela devices e verifica quais têm portas abertas
-    # Se o utilizador selecionar um dispositivo, busca as portas abertas
-    # e as vulnerabilidades associadas, incluindo CVEs e EDBs
-    # A função constrói um contexto para a IA com as informações do dispositivo e suas portas
-    # e chama a função fazer_pergunta para obter recomendações de segurança
-    # A resposta da IA é formatada de Markdown para HTML usando a função formatar_resposta_markdown_para_html
-    # Os dados dos dispositivos e a resposta da IA são passados para o template ai_assist.html
-    # A rota é protegida por login_required para garantir que apenas utilizadores autenticados possam acessar
-    # A função usa o decorator login_required para garantir que apenas utilizadores autenticados possam acessar
-    # A função get_db é usada para obter a conexão com o banco de dados SQLite
-    # A consulta SQL é feita usando parâmetros para evitar injeção de SQL
-    # A resposta inclui uma lista de dispositivos com portas abertas, o IP selecionado pelo utilizador,
-    # a resposta da IA e uma mensagem de resposta, se aplicável
     @app.route('/ai_assist', methods=['GET', 'POST'])
     @login_required
     def ai_assist():
@@ -299,12 +247,6 @@ def init_app(app):
         )
     
     # Rota para a página de novo scan
-    # Exibe um formulário para iniciar um novo scan
-    # A rota é protegida por login_required para garantir que apenas utilizadores autenticados possam acessar
-    # O formulário permite escolher entre scan completo, específico ou intervalo de IPs
-    # Também permite escolher o intervalo de portas a escanear
-    # Após o scan, redireciona para a página inicial
-    # A rota usa o decorator login_required para garantir que apenas utilizadores autenticados possam acessar   
     @app.route('/new_scan')
     @login_required
     def new_scan():
@@ -312,28 +254,17 @@ def init_app(app):
         return render_template('new_scan.html', network=network, router_ip=gateway)
 
     # Rota para a página de sobre
-    # Exibe informações sobre a aplicação, como versão, autor e descrição
-    # A função renderiza o template about.html, que exibe as informações sobre a aplicação
-    # A rota usa o decorator login_required para garantir que apenas utilizadores autenticados possam acessar
     @app.route('/about')
     def about():
         return render_template('about.html', network=network, router_ip=gateway)
 
     # Rota para a página de ajuda
-    # Exibe informações de ajuda sobre como usar a aplicação
-
-    # A função renderiza o template help.html, que exibe as informações de ajuda
-    # A rota usa o decorator login_required para garantir que apenas utilizadores autenticados possam acessar
     @app.route('/help')
     @login_required
     def help():
         return render_template('help.html', network=network, router_ip=gateway)
 
     # Rota para a página de reportar problema
-    # Exibe um formulário para reportar problemas ou bugs na aplicação
-    # A rota é protegida por login_required para garantir que apenas utilizadores autenticados possam acessar
-    # A função renderiza o template report_issue.html, que exibe o formulário de reportar problema
-    # A rota usa o decorator login_required para garantir que apenas utilizadores autenticados possam acessar
     @app.route('/report', methods=['GET', 'POST'])
     @login_required
     def report_issue():
@@ -356,20 +287,12 @@ def init_app(app):
         return render_template('report_issue.html', network=network, router_ip=gateway)
 
     # Rota para a página de agradecimento
-    # Exibe uma mensagem de agradecimento após o utilizador reportar um problema
     @app.route('/thankyou')
     @login_required
     def thank_you():
         return render_template('thankyou.html', network=network, router_ip=gateway)
 
-    # Rota para exibir o histórico de scans
-    # Exibe uma lista de todos os scans realizados, ordenados por data
-    # A rota é protegida por login_required para garantir que apenas utilizadores autenticados possam acessar
-    # A função busca os scans na tabela scans e os exibe em um template
-    # A consulta SQL é feita para obter todos os scans ordenados pela data mais recente
-    # Os dados são passados para o template history.html, que renderiza uma tabela com os scans
-    # A função usa o decorator login_required para garantir que apenas utilizadores autenticados
-    # possam acessar o histórico de scans    
+    # Rota para exibir o histórico de scans  
     @app.route('/history')
     @login_required
     def history():
@@ -407,13 +330,6 @@ def init_app(app):
         return render_template('reports.html', network=network, router_ip=gateway)
 
     # Rota para exportar os dispositivos em formato CSV
-    # A rota é protegida por login_required para garantir que apenas utilizadores autenticados possam acessar
-    # A função busca todos os dispositivos na tabela devices e os exporta para um arquivo CSV
-    # Os dados são escritos em um objeto StringIO, que é convertido para BytesIO
-    # e enviado como um arquivo para download
-    # O arquivo é enviado com o tipo MIME 'text/csv' e o nome 'devices.csv'
-    # A função usa o decorator login_required para garantir que apenas utilizadores autenticados
-    # possam acessar a exportação de dispositivos
     @app.route('/export/csv/devices')
     @login_required
     def export_csv_devices():
@@ -428,13 +344,6 @@ def init_app(app):
                          download_name='devices.csv')
 
     # Rota para exportar os dispositivos com informações completas em formato CSV
-    # A rota é protegida por login_required para garantir que apenas utilizadores autenticados possam acessar
-    # A função busca todos os dispositivos na tabela devices e suas portas, CVEs e EDBs associadas
-    # Os dados são organizados em um formato tabular e escritos em um objeto StringIO
-    # O CSV resultante inclui informações detalhadas sobre cada dispositivo,
-    # incluindo IP, hostname, MAC, vendor, last_seen, portas abertas, serviços,
-    # produtos, versões, estados, CVEs e EDBs associadas
-    # O arquivo é enviado como um download com o nome 'devices_full.csv'
     @app.route('/export/csv/devices/full')
     @login_required
     def export_csv_devices_full():
@@ -541,33 +450,14 @@ def init_app(app):
             mimetype='text/csv',
             download_name='devices_full.csv'
         )
-    # Rota para encerrar o servidor Flask
-    # Esta rota é usada para encerrar o servidor Flask de forma controlada
-
-    # A função usa o método os.kill para enviar um sinal SIGINT ao processo atual
-    # Isso simula o pressionamento de Ctrl+C no terminal, encerrando o servidor Flask
-    # A função também pode renomear a base de dados antes de encerrar, se necessário
-    # A rota retorna uma mensagem indicando que o servidor está sendo encerrado
-    # A função usa o decorator login_required para garantir que apenas utilizadores autenticados possam acessar
+    # Rota para encerrar o servidor Flask (usada para testes com webview)
     @app.route('/shutdown', methods=['POST'])
     @login_required
     def shutdown():
         os.kill(os.getpid(), signal.SIGINT)
         return 'A encerrar o servidor Flask...'
 
-
     # Rota para o WebSocket
-    # Esta rota é usada para estabelecer uma conexão WebSocket com o cliente
-    # A função ws_connect é chamada quando um cliente se conecta ao WebSocket
-    # A função imprime uma mensagem no console indicando que um cliente WebSocket se conectou
-    # A rota usa o decorator socketio.on para registrar a função ws_connect como um manipulador de eventos de conexão WebSocket
-    # Isso permite que o servidor Flask receba mensagens do cliente e envie mensagens de volta
-    # A função ws_connect pode ser expandida para enviar mensagens de status ou atualizações para o cliente
-    # A rota usa o decorator socketio.on para registrar a função ws_connect como um manipulador de eventos de conexão WebSocket
-    # Isso permite que o servidor Flask receba mensagens do cliente e envie mensagens de volta
-    # A função ws_connect pode ser expandida para enviar mensagens de status ou atualizações para o cliente
-    # A função ws_connect é chamada automaticamente quando um cliente se conecta ao WebSocket
-    # A função pode ser usada para enviar mensagens de status ou atualizações para o cliente
     @socketio.on('connect')
     def ws_connect():
         print("WS client conectado")

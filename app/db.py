@@ -3,6 +3,7 @@ from flask import g, current_app
 import os
 from datetime import datetime
 
+# Funções para manipulação da base de dados
 def get_db():
     if "db" not in g:
         g.db = sqlite3.connect(
@@ -12,14 +13,17 @@ def get_db():
         g.db.row_factory = sqlite3.Row
     return g.db
 
+# Função para fechar a base de dados
 def close_db(e=None):
     db = g.pop("db", None)
     if db:
         db.close()
 
+# Função para inicializar a base de dados
 def init_app(app):
     app.teardown_appcontext(close_db)
 
+#Função para fazer backup da base de dados
 def backup_db(ip_address):
     db_path = current_app.config["DB_PATH"]
     default_backup_dir = os.path.dirname(db_path) or os.getcwd()
