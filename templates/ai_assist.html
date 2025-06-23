@@ -1,21 +1,21 @@
 {% extends "base.html" %}
 {% block body %}
 <div class="container mt-4">
+  <h2 class="card-title mb-4" style="font-weight: 700; color: #2c3e50;">
+    <i class="bi bi-robot"></i> Assistente de IA
+  </h2>
 
-
-        <h2 class="card-title mb-4" style="font-weight: 700; color: #2c3e50;">
-        <i class="bi bi-robot"></i> Assistente de IA
-      </h2>
   <p>
-    Utilize este assistente para analisar cada um dos IP's dos seus dispositivos na rede e obter respostas e mitigações para potenciais vulnerabilidades.<br>
+    Utilize este assistente para analisar cada um dos IPs dos seus dispositivos na rede e obter respostas e mitigações para potenciais vulnerabilidades.
   </p>
   <p>
     <strong>Nota:</strong> A análise é feita apenas em IPs com portas abertas detetadas. Se um IP não tiver portas abertas, não será apresentado.
   </p>
-  <form method="POST" class="row g-2 align-items-end mb-3">
+
+  <form method="POST" class="row g-2 align-items-end mb-3" id="form-analisar">
     <div class="col-auto">
       <p><em>Selecione um IP abaixo e clique em "Analisar" para obter recomendações de segurança.</em></p>
-      <select class="form-select shadow" id="ip" name="ip" required >
+      <select class="form-select shadow" id="ip" name="ip" required>
         <option value="">-- Escolhe um IP --</option>
         {% for ip, mac, hostname in ips %}
           <option value="{{ ip }}" {% if ip == ip_escolhido %}selected{% endif %}>
@@ -25,58 +25,62 @@
       </select>
     </div>
     <div class="col-auto">
-      <button type="submit" class="btn btn-primary">Analisar</button>
+      <button type="submit" class="btn btn-primary" id="btn-analisar">Analisar</button>
     </div>
   </form>
 
+  <!-- Spinner -->
+  <div id="spinner" class="text-primary d-none mb-3 d-flex align-items-center" style="gap: 0.5rem;">
+    <div class="spinner-border" role="status" aria-hidden="true"></div>
+    <span>A IA está a pensar... prepara-se para receber recomendações inteligentes!</span>
+  </div>
 
+  {% if mensagem_erro_quota %}
+  <div class="alert alert-warning mt-3 d-flex align-items-center" role="alert" style="gap: 0.5rem;">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    {{ mensagem_erro_quota }}
+  </div>
+  {% endif %}
 
-
-{% if resposta_ia or resposta %}
-  <div class="mt-4">
+  {% if resposta_ia or resposta %}
+  <div id="card-resposta" class="mt-4">
     <div class="card bg-light shadow">
       <div class="card-header bg-light">
         <h5 class="mb-0">Resposta da IA</h5>
       </div>
       <div class="card-body" style="max-height: 500px; overflow-y: auto;">
-        <div class="resposta-ia" style="font-family: 'Segoe UI', sans-serif;">
+        <div class="resposta-ia markdown-body">
           {{ resposta_ia | safe }}
           {{ resposta | safe }}
         </div>
       </div>
     </div>
   </div>
+  {% endif %}
+</div>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('form-analisar');
+  const spinner = document.getElementById('spinner');
+  const btnAnalisar = document.getElementById('btn-analisar');
+  const cardResposta = document.getElementById('card-resposta');
+  const respostaIa = document.querySelector('.resposta-ia');
 
+  form.addEventListener('submit', () => {
+    btnAnalisar.disabled = true;
+    spinner.classList.remove('d-none');
 
-
-  <style>
-    .resposta-ia strong {
-        color: #fd0d0d;
+    // Esconder card anterior para não confundir o utilizador
+    if (cardResposta) {
+      cardResposta.style.display = 'none';
     }
 
-    .resposta-ia ol, .resposta-ia ul {
-        padding-left: 1.5rem;
-        margin-bottom: 1rem;
+    // Limpar conteúdo anterior da resposta IA para feedback limpo
+    if (respostaIa) {
+      respostaIa.innerHTML = '';
     }
-
-    .resposta-ia li {
-        margin-bottom: 0.5rem;
-    }
-
-    .resposta-ia br {
-        margin-bottom: 0.5rem;
-    }
-
-    .resposta-ia a {
-        color: #198754;
-        text-decoration: none;
-    }
-
-    .resposta-ia a:hover {
-        text-decoration: underline;
-    }
-  </style>
-{% endif %}
-
+  });
+});
+</script>
 {% endblock %}

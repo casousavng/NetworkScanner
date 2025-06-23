@@ -5,6 +5,7 @@ import io
 import json
 import ipaddress
 import netifaces
+import markdown2
 
 from flask import (
     render_template,
@@ -18,11 +19,12 @@ from flask import (
 from flask_login import login_required
 
 from .mail import send_issue_report
-from .ai import fazer_pergunta, formatar_resposta_markdown_para_html
+from .ai import fazer_pergunta
 from .db import get_db
 from .scan import scan_and_store
 from .extensions import socketio
 from .graph import build_network_data
+from google.api_core.exceptions import ResourceExhausted
 
 import plotly
 
@@ -181,18 +183,19 @@ def init_app(app):
 
         # Obter todos os dispositivos
         cur.execute("SELECT ip, mac, hostname FROM devices ORDER BY last_seen DESC")
-        devices = [ (row['ip'], row['mac'], row['hostname']) for row in cur.fetchall() ]
+        devices = [(row['ip'], row['mac'], row['hostname']) for row in cur.fetchall()]
 
         # Vai buscar todos os IPs com pelo menos uma porta aberta
         cur.execute("SELECT DISTINCT ip FROM ports WHERE state='open'")
         ips_com_portas_abertas = set(row['ip'] for row in cur.fetchall())
 
         # Só passa para o template os dispositivos com portas abertas
-        ips = [ (ip, mac, hostname) for ip, mac, hostname in devices if ip in ips_com_portas_abertas ]
+        ips = [(ip, mac, hostname) for ip, mac, hostname in devices if ip in ips_com_portas_abertas]
 
         resposta = ""
         resposta_ia = ""
         ip_escolhido = ""
+        mensagem_erro_quota = None
 
         if request.method == 'POST':
             ip_escolhido = request.form.get("ip")
@@ -200,23 +203,23 @@ def init_app(app):
             # Obter dados de portas + CVEs + EDBs associados ao IP selecionado
             cur.execute("""
                 SELECT p.port, p.service, p.version, c.cve_id, c.description, c.cvss,
-                       e.ebd_id, e.reference_url, e.severity
+                    e.ebd_id, e.reference_url, e.severity
                 FROM ports p
                 LEFT JOIN cves c ON p.id = c.port_id
                 LEFT JOIN vulnerabilities v ON v.port_id = p.id
                 LEFT JOIN edbs e ON e.vulnerability_id = v.id
                 WHERE p.ip=?
             """, (ip_escolhido,))
-            
+
             rows = cur.fetchall()
 
             if not rows:
-                resposta = "Não foram detetadas portas abertas, serviços vulneráveis, CVEs ou EDBs neste dispositivo.<br>"
-                resposta += "Recomenda-se manter o dispositivo atualizado e monitorizar regularmente para garantir a segurança."
+                resposta = (
+                    "Não foram detetadas portas abertas, serviços vulneráveis, CVEs ou EDBs neste dispositivo.<br>"
+                    "Recomenda-se manter o dispositivo atualizado e monitorizar regularmente para garantir a segurança."
+                )
             else:
-                # Construir contexto da pergunta para a IA
                 contexto = f"Foi detetado um dispositivo com o IP {ip_escolhido}. As seguintes portas estão abertas:\n"
-                
                 tem_cves = False
                 tem_ebds = False
                 tem_portas = len(rows) > 0
@@ -232,9 +235,16 @@ def init_app(app):
 
                 contexto += "\nCom base nesta informação, quais as principais recomendações para mitigar as vulnerabilidades detetadas?"
 
-                # CHAMAR A IA COM OS FLAGS CORRETOS
-                resposta_raw = fazer_pergunta(contexto, tem_cves=tem_cves, tem_edbs=tem_ebds, tem_portas_abertas=tem_portas)
-                resposta_ia = formatar_resposta_markdown_para_html(resposta_raw)
+                try:
+                    # CHAMAR A IA COM OS FLAGS CORRETOS
+                    resposta_raw = fazer_pergunta(contexto, tem_cves=tem_cves, tem_edbs=tem_ebds, tem_portas_abertas=tem_portas)
+                    resposta_ia = markdown2.markdown(resposta_raw)
+                except ResourceExhausted as e:
+                    # Podes tentar extrair retry_delay do erro se disponível, senão colocar um valor fixo
+                    retry_time = 5  # Ajusta conforme necessário
+                    mensagem_erro_quota = (
+                        f"Quota excedida! Por favor, espere {retry_time} minutos e tente novamente."
+                    )
 
         return render_template(
             "ai_assist.html",
@@ -242,6 +252,7 @@ def init_app(app):
             ip_escolhido=ip_escolhido,
             resposta=resposta,
             resposta_ia=resposta_ia,
+            mensagem_erro_quota=mensagem_erro_quota,
             network=network,
             router_ip=gateway
         )

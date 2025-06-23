@@ -14,3 +14,4 @@ screeninfo
 numpy
 google-generativeai
 netifaces
+markdown2
