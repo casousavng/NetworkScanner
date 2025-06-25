@@ -1,7 +1,7 @@
 import os, sqlite3
 
 DB_PATH = os.path.join("data", "rede.db") # Caminho para a base de dados
-SCHEMA  = "app/schema.sql"
+SCHEMA  = "schema/schema.sql"
 
 def init_db():
     os.makedirs("data", exist_ok=True)
