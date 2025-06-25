@@ -18,7 +18,7 @@ from flask import (
 )
 from flask_login import login_required
 
-from .mail import send_issue_report
+from .mail import send_issue_report, allowed_file, MAX_FILE_SIZE
 from .ai import fazer_pergunta
 from .db import get_db
 from .scan import scan_and_store
@@ -275,7 +275,7 @@ def init_app(app):
     def help():
         return render_template('help.html', network=network, router_ip=gateway)
 
-    # Rota para a página de reportar problema
+    # Rota para a página de reportar problemas
     @app.route('/report', methods=['GET', 'POST'])
     @login_required
     def report_issue():
@@ -283,15 +283,33 @@ def init_app(app):
             name = request.form.get('name', '').strip()
             email = request.form.get('email', '').strip()
             issue_text = request.form.get('issue', '').strip()
+            screenshot = request.files.get('screenshot')
 
             if not name or not email or not issue_text:
                 flash('Por favor, preencha todos os campos antes de enviar.', 'warning')
                 return redirect(url_for('report_issue'))
 
-            # Monta a mensagem para o email
-            message = f"Nome: {name}\nEmail: {email}\n\nProblema reportado:\n{issue_text}"
+            if screenshot and screenshot.filename != '':
+                if not allowed_file(screenshot.filename):
+                    flash('Formato de ficheiro não permitido. Use apenas JPG, PNG ou GIF.', 'danger')
+                    return redirect(url_for('report_issue'))
 
-            send_issue_report(message, "report@networkscanner.com")
+                screenshot.seek(0, 2)  # move para o fim do ficheiro
+                file_size = screenshot.tell()
+                screenshot.seek(0)  # volta ao início para leitura posterior
+
+                if file_size > MAX_FILE_SIZE:
+                    flash('Ficheiro demasiado grande. Tamanho máximo: 2 MB.', 'danger')
+                    return redirect(url_for('report_issue'))
+
+            issue_data = {
+                'name': name,
+                'email': email,
+                'issue': issue_text,
+                'screenshot': screenshot,
+            }
+
+            send_issue_report(issue_data, "report@networkscanner.com")
             flash('Obrigado por reportar o problema. Entraremos em contacto em breve.', 'success')
             return redirect(url_for('thank_you'))
 

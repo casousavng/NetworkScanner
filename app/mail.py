@@ -1,10 +1,17 @@
 from flask_mail import Mail, Message
+from markupsafe import escape
 import ipaddress
 
 mail = Mail()
 
 def init_mail(app):
     mail.init_app(app)
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+MAX_FILE_SIZE = 2 * 1024 * 1024  # 2 MB
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def count_ports(port_range: str):
     try:
@@ -57,34 +64,77 @@ def count_ips(ip_list):
 
     return total
 
-def send_issue_report(issue_text, recipient_email):
-    """
-    Envia um email a reportar um problema submetido pelo utilizador.
-    """
+def send_issue_report(data, recipient_email):
+    from email.utils import make_msgid
+
+    name = data.get('name', '').strip()
+    email = data.get('email', '').strip()
+    issue_text = data.get('issue', '').strip().replace('\r\n', '\n').replace('\r', '\n')
+    screenshot = data.get('screenshot')  # objeto FileStorage do Flask
+
+    plain_text = (
+        f"Nome: {name}\n"
+        f"Email: {email}\n\n"
+        "Problema reportado:\n"
+        f"{issue_text}\n\n"
+        "Por favor, verifique e tome as medidas necessárias."
+    )
+
+    issue_html = escape(issue_text).replace('\n', '<br>')
+
     msg = Message(
         subject="🛠️ Novo Problema Reportado - NetworkScanner",
         sender="scanner@networkscanner.com",
         recipients=[recipient_email]
     )
+    msg.body = plain_text
 
-    msg.body = (
-        "Um novo problema foi reportado através do NetworkScanner:\n\n"
-        f"{issue_text}\n\n"
-        "Por favor, verifique e tome as medidas necessárias."
-    )
+    if screenshot and screenshot.filename != '':
+        screenshot.seek(0)
+        file_data = screenshot.read()
+        content_id = make_msgid(domain="networkscanner.com")
+        msg.attach(
+            filename=screenshot.filename,
+            content_type=screenshot.content_type,
+            data=file_data,
+            disposition='inline',
+            headers={'Content-ID': content_id}
+        )
 
-    msg.html = f"""
-    <h2 style="color: #e74c3c;">🛠️ Problema Reportado</h2>
-    <p><strong>Descrição:</strong></p>
-    <blockquote style="background-color: #f9f9f9; border-left: 4px solid #e74c3c; padding: 10px;">
-        {issue_text}
-    </blockquote>
-    <p style="margin-top: 20px; font-size: 0.9em; color: #7f8c8d;">
-        Este problema foi enviado por um utilizador do sistema NetworkScanner.
-    </p>
-    """
+        # Adiciona a imagem inline no HTML usando o Content-ID (sem os <>)
+        html_text = f"""
+        <h2 style="color: #e74c3c;">🛠️ Problema Reportado</h2>
+        <p><strong>Nome:</strong> {escape(name)}<br>
+        <strong>Email:</strong> {escape(email)}</p>
+        <p><strong>Descrição:</strong></p>
+        <blockquote style="background-color: #f9f9f9; border-left: 4px solid #e74c3c; padding: 10px;">
+            {issue_html}
+        </blockquote>
+        <p><strong>Imagem Anexada:</strong></p>
+        <img src="cid:{content_id[1:-1]}" alt="Imagem Anexada" style="max-width: 100%; height: auto; border: 1px solid #ddd; padding: 5px;">
+        <p style="margin-top: 20px; font-size: 0.9em; color: #7f8c8d;">
+            Este problema foi enviado por um utilizador do sistema NetworkScanner.
+        </p>
+        """
+    else:
+        # Caso não tenha anexo, HTML normal
+        html_text = f"""
+        <h2 style="color: #e74c3c;">🛠️ Problema Reportado</h2>
+        <p><strong>Nome:</strong> {escape(name)}<br>
+        <strong>Email:</strong> {escape(email)}</p>
+        <p><strong>Descrição:</strong></p>
+        <blockquote style="background-color: #f9f9f9; border-left: 4px solid #e74c3c; padding: 10px;">
+            {issue_html}
+        </blockquote>
+        <p style="margin-top: 20px; font-size: 0.9em; color: #7f8c8d;">
+            Este problema foi enviado por um utilizador do sistema NetworkScanner.
+        </p>
+        """
+
+    msg.html = html_text
 
     mail.send(msg)
+
 
 def send_scan_start_email(recipient_email, scan_params):
     """
