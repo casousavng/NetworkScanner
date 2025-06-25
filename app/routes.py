@@ -17,6 +17,8 @@ from flask import (
     send_file,
 )
 from flask_login import login_required
+from smtplib import SMTPServerDisconnected
+from google.api_core.exceptions import ResourceExhausted
 
 from .mail import send_issue_report, allowed_file, MAX_FILE_SIZE
 from .ai import fazer_pergunta
@@ -24,7 +26,6 @@ from .db import get_db
 from .scan import scan_and_store
 from .extensions import socketio
 from .graph import build_network_data
-from google.api_core.exceptions import ResourceExhausted
 
 import plotly
 
@@ -309,13 +310,22 @@ def init_app(app):
                 'screenshot': screenshot,
             }
 
-            send_issue_report(issue_data, "report@networkscanner.com")
-            flash('Obrigado por reportar o problema. Entraremos em contacto em breve.', 'success')
-            return redirect(url_for('thank_you'))
+            try:
+                send_issue_report(issue_data, "report@networkscanner.com")
+                flash("Obrigado por reportar o problema. Entraremos em contacto em breve.", "success")
+                return redirect(url_for('report_issue')) # Redireciona para a mesma página após o envio podemos optar para encaminhar para uma página de agradecimento
+            except SMTPServerDisconnected as e:
+                print(f"Erro SMTPServerDisconnected: {e}")
+                flash("Ocorreu um erro ao enviar o email. Por favor, tente novamente mais tarde.", "danger")
+                return redirect(url_for('report_issue'))
+            except Exception as e:
+                print(f"Erro inesperado: {e}")
+                flash("Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.", "danger")
+                return redirect(url_for('report_issue'))
 
         return render_template('report_issue.html', network=network, router_ip=gateway)
 
-    # Rota para a página de agradecimento
+    # Rota para a página de agradecimento (INATIVA)
     @app.route('/thankyou')
     @login_required
     def thank_you():
