@@ -22,7 +22,7 @@
         <span class="badge bg-danger">{{ info.vulnerabilities | length }} vulnerabilidades</span>
       </div>
 
-      <div id="vulns-{{ loop.index }}" class="collapse card-body" style="max-height: 400px; overflow-y: auto;">
+      <div id="vulns-{{ loop.index }}" class="collapse card-body" style="max-height: 400px; overflow-y: auto;" data-bs-parent="#accordionDevices">
         <div class="table-responsive">
           <table class="table table-sm table-bordered w-100">
             <thead class="table-light">
