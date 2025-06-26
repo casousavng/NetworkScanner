@@ -44,12 +44,35 @@
       </ul>
 
       <!-- Info de rede -->
-      <span class="nav-link disabled mt-auto mb-1 network-info collapsible-item" style="font-size: 0.8em; color: #2c3e50;">
+      <span class="nav-link disabled mt-auto mb-1 network-info collapsible-item" style="font-size: 0.8em; color: #2c3e50; display: none;" id="networkInfoBox">
         <strong><i class="bi bi-laptop"></i> IP:</strong> {{ network.addr }}<br>
         <strong><i class="bi bi-router"></i> Router:</strong> {{ router_ip }}<br>
         <strong><i class="bi bi-diagram-3"></i> Máscara:</strong> {{ network.netmask }}<br>
         <strong><i class="bi bi-broadcast"></i> Broadcast:</strong> {{ network.broadcast }}
       </span>
+      <span class="nav-link mt-auto mb-1 network-info collapsible-item" style="font-size: 1.1em; cursor: pointer;" id="networkInfoIcon" title="Mostrar informações de rede">
+        <i class="bi bi-diagram-3"></i> Informações de Rede
+      </span>
+      <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          const icon = document.getElementById('networkInfoIcon');
+          const infoBox = document.getElementById('networkInfoBox');
+          if (icon && infoBox) {
+        icon.addEventListener('mouseenter', () => {
+          infoBox.style.display = 'block';
+        });
+        icon.addEventListener('mouseleave', () => {
+          infoBox.style.display = 'none';
+        });
+        infoBox.addEventListener('mouseenter', () => {
+          infoBox.style.display = 'block';
+        });
+        infoBox.addEventListener('mouseleave', () => {
+          infoBox.style.display = 'none';
+        });
+          }
+        });
+      </script>
     </div>
 
     <!-- Botão de toggle -->
