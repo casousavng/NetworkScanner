@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container mt-4">
+  <h2 class="card-title mb-4" style="font-weight: 700; color: #2c3e50;">
+    <i class="bi bi-exclamation-triangle"></i> Dispositivos com Vulnerabilidades
+  </h2>
+
+  <div class="mb-3">
+    <input type="text" id="searchInput" class="form-control" placeholder="Pesquisar IP ou hostname...">
+  </div>
+
+  <div class="accordion" id="accordionDevices">
+    {% for ip, info in device_vulns.items() %}
+    <div class="card mb-2">
+      <div class="card-header d-flex justify-content-between align-items-center" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#vulns-{{ loop.index }}">
+        <div>
+          <strong>{{ ip }}</strong>
+          {% if info.hostname %}
+            <small class="text-muted ms-2">({{ info.hostname }})</small>
+          {% endif %}
+        </div>
+        <span class="badge bg-danger">{{ info.vulnerabilities | length }} vulnerabilidades</span>
+      </div>
+
+      <div id="vulns-{{ loop.index }}" class="collapse card-body" style="max-height: 400px; overflow-y: auto;">
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered w-100">
+            <thead class="table-light">
+              <tr>
+                <th>Porta</th>
+                <th>Serviço</th>
+                <th>Produto</th>
+                <th>Versão</th>
+                <th>CVE</th>
+                <th>Descrição</th>
+                <th>CVSS</th>
+                <th>EDB</th>
+                <th>Severidade</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for v in info.vulnerabilities %}
+              <tr>
+                <td>{{ v.port }}</td>
+                <td>{{ v.service }}</td>
+                <td>{{ v.product }}</td>
+                <td>{{ v.version }}</td>
+                <td>{{ v.cve_id or '-' }}</td>
+                <td style="max-width: 300px;">{{ v.description or '-' }}</td>
+                <td>{{ v.cvss or '-' }}</td>
+                <td>
+                  {% if v.reference_url %}
+                    <a href="{{ v.reference_url }}" target="_blank">{{ v.ebd_id }}</a>
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>{{ v.severity or '-' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+document.getElementById('searchInput').addEventListener('keyup', function () {
+  let query = this.value.toLowerCase();
+  document.querySelectorAll('#accordionDevices .card').forEach(function (card) {
+    let header = card.querySelector('.card-header').textContent.toLowerCase();
+    card.style.display = header.includes(query) ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}

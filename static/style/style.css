@@ -4,6 +4,7 @@ html, body {
   margin: 0;
   padding: 0;
   overflow: hidden; /* Impede scroll na página */
+  
 }
 
 body {
@@ -36,7 +37,8 @@ body {
 
 /* Quando a sidebar está colapsada */
 .sidebar.collapsed {
-  width: 0;
+  width: 60px; /* ou 50px se quiseres ainda mais compacto */
+  overflow: hidden;
   border: none;
 }
 
@@ -77,31 +79,73 @@ body {
   white-space: nowrap; /* Impede quebras de linha no texto */
 }
 
-/* Esconde a lista quando colapsada */
+/* Corrigido: não escondemos a lista ao colapsar */
 .sidebar.collapsed ul {
-  display: none;
+  padding: 0;
 }
 
-/* Esconde links individuais quando colapsada */
-.sidebar.collapsed > span.nav-link {
-  display: none;
+/* Estilo dos links da sidebar ao colapsar */
+.sidebar.collapsed ul.nav li.nav-item .nav-link {
+  text-align: center;
+  padding-left: 0;
+  padding-right: 0;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+/* Ícones continuam visíveis */
+.sidebar.collapsed ul.nav li.nav-item .nav-link i {
+  display: block;
+  font-size: 1.3rem;
+  margin: 0 auto 0.2rem auto;
+}
+
+/* Esconde o texto que vem após os ícones */
+.sidebar.collapsed ul.nav li.nav-item .nav-link span,
+.sidebar.collapsed ul.nav li.nav-item .nav-link strong,
+.sidebar.collapsed ul.nav li.nav-item .nav-link i + * {
+  display: none !important;
+}
+
+/* Sidebar colapsada: esconde textos e seções extras */
+.sidebar.collapsed .label,
+.sidebar.collapsed .collapsible-item {
+  display: none !important;
+}
+
+#toggleSidebarBtn {
+  position: absolute;
+  top: 10px;
+  left: 260px;
+  transition: left 0.3s ease;
+  z-index: 1000;
+}
+
+.sidebar.collapsed + #toggleSidebarBtn {
+  left: 80px;
+}
+
+.sidebar {
+  width: 260px;
+  transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 80px;
 }
 
 /* === Conteúdo principal === */
 .content {
   flex: 1;
   position: relative;
-  overflow: hidden; /* Impede scroll no conteúdo principal */
+  overflow: hidden;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start; /* Alinha conteúdo à esquerda */
+  align-items: flex-start;     /* Opcional: alinha ao topo */
   height: 100%;
-  padding-left: 20px;
+  padding: 1rem;               /* Usa padding positivo para afastar da borda */
 }
 
-/* Centraliza o conteúdo quando a sidebar está fechada */
-.sidebar.collapsed ~ .content {
-  justify-content: center;
-}
 
 /* Painel lateral de detalhe */
 .detail-panel {
@@ -122,7 +166,7 @@ body {
 #toggleSidebarBtn {
   position: absolute;
   top: 10px;
-  left: 228px; /* Fica à direita da sidebar */
+  left: 238px; /* Fica à direita da sidebar */
   z-index: 1000;
   background: #ffffff;
   border: 1px solid #ddd;
@@ -136,7 +180,7 @@ body {
 
 /* Quando a sidebar está colapsada, botão move-se para a esquerda */
 .sidebar.collapsed + #toggleSidebarBtn {
-  left: 10px;
+  left: 60px;
 }
 
 /* Ícone dentro do botão de toggle */

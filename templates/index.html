@@ -7,38 +7,50 @@
   </a>
 </div>
 
-<div style="position: absolute; top: 70px; left: 32px; z-index: 1000; display: flex; align-items: center;">
-  <span style="font-weight: 600; color: #2c3e50; cursor: pointer;" id="map-legend-label">
-    Legenda do Mapa
-    <span style="margin-left: 6px; font-size: 18px;">&#9432;</span>
-  </span>
-  <div id="map-legend-tooltip" style="display: none; position: absolute; top: 35px; left: 0; background: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); padding: 16px 20px; min-width: 525px; z-index: 2000;">
-    <div style="display: flex; align-items: center; margin-bottom: 8px;">
-      <span style="display: inline-block; width: 18px; height: 18px; border-radius: 50%; background: #00cc00; margin-right: 10px; border: 1px solid #aaa;"></span>
-      <span>Dispositivo sem Vulnerabilidades</span>
-    </div>
-    <div style="display: flex; align-items: center; margin-bottom: 8px;">
-      <span style="display: inline-block; width: 18px; height: 18px; border-radius: 50%; background: #fff700; margin-right: 10px; border: 1px solid #aaa;"></span>
-      <span>Dispositivo com Portas Abertas mas sem Vulnerabilidades</span>
-    </div>
-    <div style="display: flex; align-items: center; margin-bottom: 8px;">
-      <span style="display: inline-block; width: 18px; height: 18px; border-radius: 50%; background: #ffb300; margin-right: 10px; border: 1px solid #aaa;"></span>
-      <span>Dispositivo com algumas Vulnerabilidades</span>
-    </div>
-    <div style="display: flex; align-items: center; margin-bottom: 8px;">
-      <span style="display: inline-block; width: 18px; height: 18px; border-radius: 50%; background: #ff0000; margin-right: 10px; border: 1px solid #aaa;"></span>
-      <span>Dispositivo Critico em Vulnerabilidades</span>
-    </div>
+<div class="container mt-4">
+  <!-- Título e Legenda -->
+  <div style="margin-bottom: 16px;">
+    <h2 class="card-title mb-1" style="font-weight: 700; color: #2c3e50;">
+      <i class="bi bi-map-fill" aria-hidden="true"></i> Mapa Interativo da Rede
+    </h2>
+    <div style="position: relative;">
+      <span style="font-weight: 600; color: #2c3e50; cursor: pointer;" id="map-legend-label">
+        Legenda do Mapa
+        <span style="margin-left: 6px; font-size: 18px;">&#9432;</span>
+      </span>
+      <div id="map-legend-tooltip" style="display: none; position: absolute; top: 30px; left: 0; background: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); padding: 16px 20px; min-width: 525px; z-index: 2000;">
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+          <span style="width: 18px; height: 18px; border-radius: 50%; background: #00cc00; margin-right: 10px; border: 1px solid #aaa;"></span>
+          <span>Dispositivo sem Vulnerabilidades</span>
+        </div>
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+          <span style="width: 18px; height: 18px; border-radius: 50%; background: #fff700; margin-right: 10px; border: 1px solid #aaa;"></span>
+          <span>Dispositivo com Portas Abertas mas sem Vulnerabilidades</span>
+        </div>
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+          <span style="width: 18px; height: 18px; border-radius: 50%; background: #ffb300; margin-right: 10px; border: 1px solid #aaa;"></span>
+          <span>Dispositivo com algumas Vulnerabilidades</span>
+        </div>
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+          <span style="width: 18px; height: 18px; border-radius: 50%; background: #ff0000; margin-right: 10px; border: 1px solid #aaa;"></span>
+          <span>Dispositivo Crítico em Vulnerabilidades</span>
+        </div>
         <div style="display: flex; align-items: center;">
-      <span style="display: inline-block; width: 18px; height: 18px; border-radius: 50%; background: #0037FF; margin-right: 10px; border: 1px solid #aaa;"></span>
-      <span>Gateway/Router</span>
+          <span style="width: 18px; height: 18px; border-radius: 50%; background: #0037FF; margin-right: 10px; border: 1px solid #aaa;"></span>
+          <span>Gateway/Router</span>
+        </div>
+      </div>
     </div>
   </div>
+
+  <!-- Mapa -->
+  <div id="network-graph" style="height: 800px;"></div>
 </div>
 
 <script>
   const legendLabel = document.getElementById('map-legend-label');
   const legendTooltip = document.getElementById('map-legend-tooltip');
+
   legendLabel.addEventListener('mouseenter', () => {
     legendTooltip.style.display = 'block';
   });
@@ -52,12 +64,6 @@
     legendTooltip.style.display = 'none';
   });
 </script>
-
-<div class="container mt-4" >
-        <h2 class="card-title mb-4" style="font-weight: 700; color: #2c3e50;">
-            <i class="bi bi-map-fill" aria-hidden="true"></i> Mapa Interativo da Rede
-      </h2>
-<div id="network-graph" style="height: 800px;"></div>
 
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
@@ -79,7 +85,7 @@
           const d = document.getElementById('detail');
           d.innerHTML = `
             <button style="position: fixed; top: 10px; right: 10px; z-index: 1000;" onclick="document.getElementById('detail').style.display='none'">Fechar</button>
-            <h5 style="word-wrap: break-word; shadow">${info.hostname}</h5>
+            <h5 style="word-wrap: break-word;">${info.hostname}</h5>
             <p><b>IP:</b> ${info.ip}</p>
             <p><b>MAC:</b> ${info.mac}</p>
             <p><b>Fabricante:</b> ${info.vendor}</p>
@@ -99,23 +105,16 @@
                       <b>Versão:</b> ${p.version || '-'} <br>
                       ${Array.isArray(p.cves) && p.cves.length ? `
                       <b>Vulnerabilidades:</b>
-                        ${p.cves.length === 0 ? '<i>Sem CVEs detetadas.</i>' : ''}
-                        ${p.cves.length > 0 ? `
-                        ${p.cves.length + p.edb.length} <br>
-                        ` : ''}
-                      <div style="margin-left: 10px;">
-                      <b>CVE's:</b></div> 
+                      <div style="margin-left: 10px;"><b>CVE's:</b></div> 
                       ${p.cves.map(cve => `
                         <div style="margin-left: 10px;">
                         ${cve.id ? `<b><a href="${cve.reference}" target="_blank" rel="noopener noreferrer">${cve.id}</a></b>` : `<b>Sem CVE</b>`}
                         ${cve.cvss ? `<span style="color: #d9534f;">(CVSS3: ${cve.cvss})</span>` : ''}
-                        <a href="${cve.reference}" target="_blank" rel="noopener noreferrer"></a><br>
                         </div>
                       `).join('')}
                       ` : ''}
                       ${Array.isArray(p.edb) && p.edb.length ? `
-                      <div style="margin-left: 10px;">
-                      <b>Exploit-DB:</b></div> 
+                      <div style="margin-left: 10px;"><b>Exploit-DB:</b></div> 
                       ${p.edb.map(edb => `
                         <div style="margin-left: 10px;">
                         <b><a href="${edb.reference}" target="_blank" rel="noopener noreferrer">${edb.id}</a></b>
@@ -135,4 +134,5 @@
     }
   });
 </script>
+
 {% endblock %}

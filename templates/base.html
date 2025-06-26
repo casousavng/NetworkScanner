@@ -17,27 +17,34 @@
     <div class="sidebar shadow d-flex flex-column" id="sidebar">
       <h5><span><i class="bi bi-list"></i> Menu</span></h5>
       <ul class="nav flex-column flex-grow-1">
-        <li class="nav-item"><a class="nav-link menu-link" id="mapa" href="{{ url_for('index') }}"><i class="bi bi-diagram-3"></i> Mapa</a></li>
-        <li class="nav-item"><a class="nav-link menu-link" id="scan" href="{{ url_for('new_scan') }}"><i class="bi bi-broadcast-pin"></i> Iniciar Scan</a></li>
-        <li class="nav-item"><a class="nav-link menu-link" id="dispositivos" href="{{ url_for('list_devices') }}"><i class="bi bi-hdd-network"></i> Dispositivos</a></li>
-        <li class="nav-item"><a class="nav-link menu-link" id="historico" href="{{ url_for('history') }}"><i class="bi bi-clock-history"></i> Histórico</a></li>
-        <li class="nav-item"><a class="nav-link menu-link" id="relatorios" href="{{ url_for('reports') }}"><i class="bi bi-bar-chart-line"></i> Relatórios</a></li>
-        <li class="nav-item"><a class="nav-link menu-link" id="assistenteIA" href="{{ url_for('ai_assist') }}"><i class="bi bi-robot"></i> Assistente IA</a></li>
-        <li class="nav-item"><a class="nav-link menu-link" id="ajuda" href="{{ url_for('help') }}"><i class="bi bi-question-circle"></i> Ajuda</a></li>
-        <li class="nav-item"><a class="nav-link menu-link" id="sobre" href="{{ url_for('about') }}"><i class="bi bi-info-circle"></i> Sobre</a></li>
-        <li class="nav-item"><a class="nav-link menu-link" id="reportarProblema" href="{{ url_for('report_issue') }}"><i class="bi bi-bug"></i> Reportar Problema</a></li>
+       
+        <!-- Links do Menu -->
+        <li class="nav-item"><a class="nav-link menu-link" id="mapa" title="Mapa" href="{{ url_for('index') }}"><i class="bi bi-diagram-3"></i> <span>Mapa</span></a></li>
+        <li class="nav-item"><a class="nav-link menu-link" id="scan" title="Iniciar Scan" href="{{ url_for('new_scan') }}"><i class="bi bi-broadcast-pin"></i> <span>Iniciar Scan</span></a></li>
+        <li class="nav-item"><a class="nav-link menu-link" id="dispositivos" title="Dispositivos" href="{{ url_for('list_devices') }}"><i class="bi bi-hdd-network"></i> <span>Dispositivos</span></a></li>
+        <li class="nav-item"><a class="nav-link menu-link" id="vulnerabilidades" title="Vulnerabilidades" href="{{ url_for('vuln_by_device') }}"><i class="bi bi-shield-lock"></i> <span>Vulnerabilidades</span></a></li>
+        <li class="nav-item"><a class="nav-link menu-link" id="historico" title="Histórico" href="{{ url_for('history') }}"><i class="bi bi-clock-history"></i> <span>Histórico</span></a></li>
+        <li class="nav-item"><a class="nav-link menu-link" id="relatorios" title="Relatórios" href="{{ url_for('reports') }}"><i class="bi bi-bar-chart-line"></i> <span>Relatórios</span></a></li>
+        <li class="nav-item"><a class="nav-link menu-link" id="assistenteIA" title="Assistente IA" href="{{ url_for('ai_assist') }}"><i class="bi bi-robot"></i> <span>Assistente IA</span></a></li>
+        <li class="nav-item"><a class="nav-link menu-link" id="ajuda" title="Ajuda" href="{{ url_for('help') }}"><i class="bi bi-question-circle"></i> <span>Ajuda</span></a></li>
+        <li class="nav-item"><a class="nav-link menu-link" id="sobre" title="Sobre" href="{{ url_for('about') }}"><i class="bi bi-info-circle"></i> <span>Sobre</span></a></li>
+        <li class="nav-item"><a class="nav-link menu-link" id="reportarProblema" title="Reportar Problema" href="{{ url_for('report_issue') }}"><i class="bi bi-bug"></i> <span>Reportar Problema</span></a></li>
+        <hr>
+        
+        <!-- Separador e itens de utilitários -->
+        <li class="nav-item"><a class="nav-link" title="Logout" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> <span>Logout</span></a></li>
+        <li class="nav-item"><a class="nav-link" title="Sair" href="#" onclick="fecharApp()"><i class="bi bi-x-circle"></i> <span>Sair</span></a></li>
         <li><hr></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-        <li class="nav-item"><a class="nav-link" href="#" onclick="fecharApp()"><i class="bi bi-x-circle"></i> Sair</a></li>
-        <li><hr></li>
-        <li class="nav-item mt-2">
+        <li class="nav-item mt-2 collapsible-item">
           <button class="btn btn-outline-primary w-100" id="fullscreenBtn" onclick="toggleFullScreen()">
-            <i class="bi bi-arrows-fullscreen"></i> Tela cheia
+            <i class="bi bi-arrows-fullscreen"></i> <span class="label">Tela cheia</span>
           </button>
         </li>
-        <li><hr></li>
+        <li><hr class="nav-link disabled mt-auto mb-1 network-info collapsible-item"></li>
       </ul>
-      <span class="nav-link disabled mt-auto mb-1" style="font-size: 0.8em; color: #2c3e50;">
+
+      <!-- Info de rede -->
+      <span class="nav-link disabled mt-auto mb-1 network-info collapsible-item" style="font-size: 0.8em; color: #2c3e50;">
         <strong><i class="bi bi-laptop"></i> IP:</strong> {{ network.addr }}<br>
         <strong><i class="bi bi-router"></i> Router:</strong> {{ router_ip }}<br>
         <strong><i class="bi bi-diagram-3"></i> Máscara:</strong> {{ network.netmask }}<br>
@@ -45,18 +52,19 @@
       </span>
     </div>
 
-    <!-- Botão toggle fora da sidebar -->
+    <!-- Botão de toggle -->
     <button id="toggleSidebarBtn" title="Mostrar/Ocultar Menu">
       <i class="bi bi-chevron-left"></i>
     </button>
 
+    <!-- Conteúdo principal -->
     <div class="content">
       {% block body %}{% endblock %}
       <div id="detail" class="detail-panel"></div>
     </div>
   </div>
 
-  <!-- Spinner de carregamento -->
+  <!-- Spinner -->
   <div id="loadingSpinner" class="loading-spinner" style="display:none;">
     <div class="spinner"></div>
     <p>Aguarde por favor...</p>
@@ -68,152 +76,89 @@
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
   <script>
-    // Toggle sidebar open/close
-    const sidebar = document.getElementById('sidebar');
-    const toggleBtn = document.getElementById('toggleSidebarBtn');
-    const icon = toggleBtn.querySelector('i');
+    document.addEventListener("DOMContentLoaded", function () {
+      const sidebar = document.getElementById('sidebar');
+      const toggleBtn = document.getElementById('toggleSidebarBtn');
+      const icon = toggleBtn.querySelector('i');
+      const btnFullscreen = document.getElementById('fullscreenBtn');
 
-    toggleBtn.addEventListener('click', () => {
-      sidebar.classList.toggle('collapsed');
-
-      if (sidebar.classList.contains('collapsed')) {
-        icon.classList.remove('bi-chevron-left');
-        icon.classList.add('bi-chevron-right');
-      } else {
-        icon.classList.remove('bi-chevron-right');
-        icon.classList.add('bi-chevron-left');
-      }
-    });
-
-    let isScanning = false;
-
-    function showSpinner() {
-      document.getElementById('loadingSpinner').style.display = 'flex';
-    }
-
-    function hideSpinner() {
-      document.getElementById('loadingSpinner').style.display = 'none';
-    }
-
-    document.getElementById('startScanBtn')?.addEventListener('click', function(e) {
-      if (isScanning) return;
-
-      e.preventDefault();
-
-      const isOnHomePage = window.location.pathname === '/';
-
-      if (!isOnHomePage) {
-        localStorage.setItem('startScanOnLoad', 'true');
-        window.location.href = '/';
-        return;
-      }
-
-      iniciarScan();
-    });
-
-    function iniciarScan() {
-      isScanning = true;
-      showSpinner();
-      // Desativa todos os links do menu
-      document.querySelectorAll('.menu-link').forEach(link => {
-        link.classList.add('disabled-link');
+      toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        icon.classList.toggle('bi-chevron-left');
+        icon.classList.toggle('bi-chevron-right');
       });
 
-      fetch('/scan')
-        .then(response => response.json())
-        .then(data => {
-          hideSpinner();
-          isScanning = false;
+      let isScanning = false;
 
-          document.querySelectorAll('.menu-link').forEach(link => {
-            link.classList.remove('disabled-link');
-          });
-
-          window.location.href = '/';
-        })
-        .catch(error => {
-          hideSpinner();
-          isScanning = false;
-
-          document.querySelectorAll('.menu-link').forEach(link => {
-            link.classList.remove('disabled-link');
-          });
-
-          console.error('Erro ao iniciar o scan:', error);
-        });
-    }
-
-    function fecharApp() {
-      fetch('/shutdown', { method: 'POST' })
-        .then(response => {
-          if (response.ok) {
-            window.close();
-          } else {
-            console.error('Erro ao tentar fechar a aplicação');
-          }
-        });
-    }
-
-    function toggleFullScreen() {
-      const btn = document.getElementById('fullscreenBtn');
-      const iconFull = '<i class="bi bi-arrows-fullscreen"></i> Tela cheia';
-      const iconExit = '<i class="bi bi-arrows-fullscreen"></i> Sair da tela cheia';
-
-      if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
-        const docElm = document.documentElement;
-        if (docElm.requestFullscreen) {
-          docElm.requestFullscreen();
-        } else if (docElm.webkitRequestFullscreen) {
-          docElm.webkitRequestFullscreen();
-        } else if (docElm.mozRequestFullScreen) {
-          docElm.mozRequestFullScreen();
-        } else if (docElm.msRequestFullscreen) {
-          docElm.msRequestFullscreen();
-        }
-        btn.innerHTML = iconExit;
-        localStorage.setItem('fullscreen', 'true');
-      } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-          document.webkitExitFullscreen();
-        } else if (document.mozCancelFullScreen) {
-          document.mozCancelFullScreen();
-        } else if (document.msExitFullscreen) {
-          document.msExitFullscreen();
-        }
-        btn.innerHTML = iconFull;
-        localStorage.removeItem('fullscreen');
+      function showSpinner() {
+        document.getElementById('loadingSpinner').style.display = 'flex';
       }
-    }
 
-    window.addEventListener('load', function() {
-      const btn = document.getElementById('fullscreenBtn');
-      const iconExit = '<i class="bi bi-arrows-fullscreen"></i> Sair da tela cheia';
+      function hideSpinner() {
+        document.getElementById('loadingSpinner').style.display = 'none';
+      }
+
+      document.getElementById('startScanBtn')?.addEventListener('click', function (e) {
+        if (isScanning) return;
+        e.preventDefault();
+
+        if (window.location.pathname !== '/') {
+          localStorage.setItem('startScanOnLoad', 'true');
+          window.location.href = '/';
+        } else {
+          iniciarScan();
+        }
+      });
+
+      function iniciarScan() {
+        isScanning = true;
+        showSpinner();
+        document.querySelectorAll('.menu-link').forEach(link => link.classList.add('disabled-link'));
+
+        fetch('/scan')
+          .then(res => res.json())
+          .then(data => {
+            hideSpinner();
+            isScanning = false;
+            document.querySelectorAll('.menu-link').forEach(link => link.classList.remove('disabled-link'));
+            window.location.href = '/';
+          })
+          .catch(err => {
+            hideSpinner();
+            isScanning = false;
+            document.querySelectorAll('.menu-link').forEach(link => link.classList.remove('disabled-link'));
+            console.error('Erro ao iniciar o scan:', err);
+          });
+      }
+
+      window.fecharApp = function () {
+        fetch('/shutdown', { method: 'POST' })
+          .then(res => {
+            if (res.ok) {
+              window.close();
+            } else {
+              console.error('Erro ao tentar fechar a aplicação');
+            }
+          });
+      };
+
+      window.toggleFullScreen = function () {
+        const docElm = document.documentElement;
+        if (!document.fullscreenElement) {
+          docElm.requestFullscreen?.() || docElm.webkitRequestFullscreen?.() || docElm.mozRequestFullScreen?.() || docElm.msRequestFullscreen?.();
+          btnFullscreen.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> Sair da tela cheia';
+          localStorage.setItem('fullscreen', 'true');
+        } else {
+          document.exitFullscreen?.() || document.webkitExitFullscreen?.() || document.mozCancelFullScreen?.() || document.msExitFullscreen?.();
+          btnFullscreen.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> Tela cheia';
+          localStorage.removeItem('fullscreen');
+        }
+      };
+
       if (localStorage.getItem('fullscreen') === 'true') {
         const docElm = document.documentElement;
-        if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
-          if (docElm.requestFullscreen) {
-            docElm.requestFullscreen();
-          } else if (docElm.webkitRequestFullscreen) {
-            docElm.webkitRequestFullscreen();
-          } else if (docElm.mozRequestFullScreen) {
-            docElm.mozRequestFullScreen();
-          } else if (docElm.msRequestFullscreen) {
-            docElm.msRequestFullscreen();
-          }
-          if (btn) btn.innerHTML = iconExit;
-        }
-      }
-    });
-
-    window.addEventListener('load', () => {
-      const shouldStartScan = localStorage.getItem('startScanOnLoad') === 'true';
-      const isOnHomePage = window.location.pathname === '/';
-
-      if (shouldStartScan && isOnHomePage) {
-        localStorage.removeItem('startScanOnLoad');
-        iniciarScan();
+        docElm.requestFullscreen?.();
+        btnFullscreen.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> Sair da tela cheia';
       }
     });
   </script>

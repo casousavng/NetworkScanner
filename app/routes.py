@@ -363,6 +363,57 @@ def init_app(app):
 
         return render_template('history.html', scans=scans, scan_stats=scan_stats, network=network, router_ip=gateway)
 
+    # Rota para exibir as vulnerabilidades por dispositivo
+    @app.route('/vuln_by_device')
+    @login_required
+    def vuln_by_device():
+        db = get_db()
+        cur = db.cursor()
+
+        # Obter apenas dispositivos com CVEs ou ExploitDBs associados
+        cur.execute("""
+            SELECT DISTINCT d.ip, d.hostname
+            FROM devices d
+            JOIN ports p ON d.ip = p.ip
+            JOIN vulnerabilities v ON v.port_id = p.id
+            LEFT JOIN cves c ON c.port_id = p.id
+            LEFT JOIN edbs e ON e.vulnerability_id = v.id
+            WHERE c.cve_id IS NOT NULL OR e.ebd_id IS NOT NULL
+        """)
+        devices = cur.fetchall()
+
+        device_vulns = {}
+        for device in devices:
+            ip = device['ip']
+            hostname = device['hostname']
+
+            # Buscar vulnerabilidades com CVE ou EBD
+            cur.execute("""
+                SELECT p.port, p.service, p.product, p.version,
+                    c.cve_id, c.description, c.cvss,
+                    e.ebd_id, e.reference_url, e.severity
+                FROM ports p
+                JOIN vulnerabilities v ON v.port_id = p.id
+                LEFT JOIN cves c ON c.port_id = p.id
+                LEFT JOIN edbs e ON e.vulnerability_id = v.id
+                WHERE p.ip = ? AND (c.cve_id IS NOT NULL OR e.ebd_id IS NOT NULL)
+            """, (ip,))
+            vulns = cur.fetchall()
+
+            if vulns:
+                device_vulns[ip] = {
+                    'hostname': hostname,
+                    'vulnerabilities': vulns
+                }
+
+        return render_template(
+            'vuln_by_device.html',
+            device_vulns=device_vulns,
+            network=network,
+            router_ip=gateway
+        )
+
+    # Rota para exibir os relatórios
     @app.route('/reports')
     @login_required
     def reports():
