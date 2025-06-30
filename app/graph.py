@@ -4,7 +4,6 @@ from .db import get_db
 from .scan import get_default_gateway
 
 def build_network_data():
-
     router = get_default_gateway()
 
     db = get_db()
@@ -108,13 +107,12 @@ def build_network_data():
                 color = "#ff0000"  # vermelho
                 size = MAX_SIZE
             else:
-                # Se tiver vulnerabilidades entre 1 e 5, mantemos amarelo com tamanho proporcional vulnerabilidades
+                # Se tiver vulnerabilidades entre 1 e 5
                 color = "#fff700"
                 vuln_scaled = min(total_vuln, MAX_VULN)
                 size = MIN_SIZE + (MAX_SIZE - MIN_SIZE) * vuln_scaled / MAX_VULN
 
         size = 2 * round(size / 2)
-
         node_colors.append(color)
         node_sizes.append(size)
 
@@ -130,13 +128,26 @@ def build_network_data():
         showlegend=False
     )
 
-    data = edge_traces + [node_trace]
+    data = edge_traces + [node_trace] if G.nodes else []
+
+    annotations = []
+
+    if not rows:
+        annotations.append(dict(
+            text="Realize primeiro o Scan para visualizar o mapa de rede...",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5,
+            showarrow=False,
+            font=dict(size=24, color="gray"),
+            align="center"
+        ))
 
     layout = go.Layout(
         showlegend=False,
         xaxis=dict(showgrid=True, zeroline=False, showticklabels=False),
         yaxis=dict(showgrid=True, zeroline=False, showticklabels=False),
-        dragmode=False
+        dragmode=False,
+        annotations=annotations
     )
 
     return dict(data=data, layout=layout)

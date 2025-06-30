@@ -138,3 +138,9 @@ def update_descriptions():
     print("✅ Índices de descrições construídos com sucesso.")
     update_cves_table(cve_desc_map)
     update_edbs_table(ebd_desc_map)
+
+    def main():
+        update_descriptions()
+
+    if __name__ == "__main__":
+        main()

@@ -55,29 +55,11 @@
         <strong><i class="bi bi-diagram-3"></i> Máscara:</strong> {{ network.netmask }}<br>
         <strong><i class="bi bi-broadcast"></i> Broadcast:</strong> {{ network.broadcast }}
       </span>
-      <span class="nav-link mt-auto mb-1 network-info collapsible-item" style="font-size: 1.1em; cursor: pointer;" id="networkInfoIcon" title="Mostrar informações de rede">
-        <i class="bi bi-diagram-3"></i> Informações de Rede
+      <span class="nav-link mt-auto mb-1 network-info collapsible-item" style="font-size: 0.9em; cursor: pointer;" id="networkInfoIcon" title="Mostrar informações de rede">
+        <i class="bi bi-diagram-3"></i> Mostrar Informações de Rede
       </span>
-      <script>
-        document.addEventListener("DOMContentLoaded", function () {
-          const icon = document.getElementById('networkInfoIcon');
-          const infoBox = document.getElementById('networkInfoBox');
-          if (icon && infoBox) {
-        icon.addEventListener('mouseenter', () => {
-          infoBox.style.display = 'block';
-        });
-        icon.addEventListener('mouseleave', () => {
-          infoBox.style.display = 'none';
-        });
-        infoBox.addEventListener('mouseenter', () => {
-          infoBox.style.display = 'block';
-        });
-        infoBox.addEventListener('mouseleave', () => {
-          infoBox.style.display = 'none';
-        });
-          }
-        });
-      </script>
+        <span class="nav-link mt-auto mb-1 network-info collapsible-item" id="mini-clock" style="font-size: 12px; font-family: monospace;"></span>
+  
     </div>
 
     <!-- Botão de toggle -->
@@ -190,7 +172,7 @@
       }
     });
 
-
+    // Modo escuro -> EM TESTES
     function toggleDarkMode() {
       document.body.classList.toggle('dark-mode');
       if (document.body.classList.contains('dark-mode')) {
@@ -205,6 +187,37 @@
       if (localStorage.getItem('darkMode') === 'true') {
         document.body.classList.add('dark-mode');
         document.getElementById('darkModeBtn').innerHTML = '<i class="bi bi-brightness-high"></i> <span class="label">Modo claro</span>';
+      }
+    });
+
+    // Atualiza o relógio mini
+    // Exibe a data e hora atual no formato DD.MM.AAAA HH:MM:
+    function updateMiniClock() {
+      const now = new Date();
+      const pad = n => n.toString().padStart(2, '0');
+      const formatted = `<i class="bi bi-calendar"></i> ${pad(now.getDate())}.${pad(now.getMonth()+1)}.${pad(now.getFullYear())} <i class="bi bi-clock"></i> ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+      document.getElementById('mini-clock').innerHTML = formatted;
+    }
+    updateMiniClock();
+    setInterval(updateMiniClock, 1000);
+ 
+    // Tooltip para a legenda do mapa
+    document.addEventListener("DOMContentLoaded", function () {
+      const icon = document.getElementById('networkInfoIcon');
+      const infoBox = document.getElementById('networkInfoBox');
+      if (icon && infoBox) {
+    icon.addEventListener('mouseenter', () => {
+      infoBox.style.display = 'block';
+    });
+    icon.addEventListener('mouseleave', () => {
+      infoBox.style.display = 'none';
+    });
+    infoBox.addEventListener('mouseenter', () => {
+      infoBox.style.display = 'block';
+    });
+    infoBox.addEventListener('mouseleave', () => {
+      infoBox.style.display = 'none';
+    });
       }
     });
 
