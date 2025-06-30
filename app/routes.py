@@ -657,11 +657,11 @@ def init_app(app):
     def handle_403(e):
         return render_template("error.html", error=e, network=network, router_ip=gateway), 403
 
-    #@app.errorhandler(500)
+    @app.errorhandler(500)
     def handle_500(e):
         return render_template("error.html", error=e, network=network, router_ip=gateway), 500
 
-    #@app.errorhandler(Exception)
+    @app.errorhandler(Exception)
     def handle_exception(e):
         # Se for HTTPException (como 404, etc), deixa o handler específico lidar
         if isinstance(e, HTTPException):
