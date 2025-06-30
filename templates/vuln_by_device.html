@@ -2,13 +2,50 @@
 {% block body %}
 <div class="container mt-4">
   <h2 class="card-title mb-4" style="font-weight: 700; color: #2c3e50;">
-    <i class="bi bi-exclamation-triangle"></i> Dispositivos com Vulnerabilidades
+    <i class="bi bi-exclamation-triangle"></i> Vulnerabilidades por Dispositivo
   </h2>
 
+  <!-- Filtro geral -->
   <div class="mb-3">
     <input type="text" id="searchInput" class="form-control" placeholder="Pesquisar IP ou hostname...">
   </div>
 
+  <!-- Toggle de Pesquisa Avançada -->
+  <div class="mb-3">
+    <span style="cursor: pointer; color: #495057; text-decoration: underline;" data-bs-toggle="collapse" data-bs-target="#advancedFilters" aria-expanded="false" aria-controls="advancedFilters">
+      <i class="bi bi-funnel"></i> Pesquisa Avançada
+    </span>
+  </div>
+
+  <!-- Filtros avançados -->
+  <div class="collapse mb-3" id="advancedFilters">
+    <div class="row">
+      <div class="col-md-2 mb-2">
+        <input type="text" id="searchPort" class="form-control" placeholder="Porta/Protocolo">
+      </div>
+      <div class="col-md-2 mb-2">
+        <input type="text" id="searchProduct" class="form-control" placeholder="Produto">
+      </div>
+      <div class="col-md-2 mb-2">
+        <input type="text" id="searchID" class="form-control" placeholder="ID (CVE/EBD)">
+      </div>
+      <div class="col-md-2 mb-2">
+        <select id="searchType" class="form-control">
+          <option value="">Tipo</option>
+          <option value="CVE">CVE</option>
+          <option value="Exploit-DB">Exploit-DB</option>
+        </select>
+      </div>
+      <div class="col-md-2 mb-2">
+        <input type="text" id="searchCVSS" class="form-control" placeholder="CVSS">
+      </div>
+      <div class="col-md-2 mb-2">
+        <input type="text" id="searchSeverity" class="form-control" placeholder="Severidade">
+      </div>
+    </div>
+  </div>
+
+  <!-- Accordion com dispositivos -->
   <div class="accordion" id="accordionDevices">
     {% for ip, info in device_vulns.items() %}
     <div class="card mb-2">
@@ -16,18 +53,28 @@
         <div>
           <strong>{{ ip }}</strong>
           {% if info.hostname %}
-            <small class="text-muted ms-2">({{ info.hostname }})</small>
+          <small class="text-muted ms-2">({{ info.hostname }})</small>
           {% endif %}
         </div>
-        <span class="badge bg-danger">{{ info.vulnerabilities | length }} vulnerabilidades</span>
+        <div class="d-flex align-items-center">
+          <span class="badge bg-primary me-2 advanced-search-count" style="display: none;">
+            <i class="bi bi-search"></i> <span class="count">0</span> correspondência(s)
+          </span>
+          <span class="badge bg-danger me-2">
+            <i class="bi bi-shield-exclamation"></i> {{ info.vulnerabilities | length }} vulnerabilidades
+          </span>
+          <span class="badge bg-success export-csv-btn" style="cursor: pointer;" data-index="{{ loop.index }}">
+            <i class="bi bi-download"></i> Exportar dados
+          </span>
+        </div>
       </div>
 
       <div id="vulns-{{ loop.index }}" class="collapse card-body" style="max-height: 400px; overflow-y: auto;" data-bs-parent="#accordionDevices">
         <div class="table-responsive">
           <table class="table table-sm table-bordered w-100">
-            <thead class="table-light">
+            <thead class="table-light text-center">
               <tr>
-                <th>Porta/Protocolo</th>
+                <th>Porta/Prot.</th>
                 <th>Estado</th>
                 <th>Serviço</th>
                 <th>Produto</th>
@@ -50,14 +97,14 @@
                 <td>{{ v.vuln_type }}</td>
                 <td>
                   {% if v.vuln_type == "CVE" %}
-                    <a href="https://vulners.com/cve/{{ v.vuln_id }}" target="_blank">{{ v.vuln_id }}</a>
+                  <a href="https://vulners.com/cve/{{ v.vuln_id }}" target="_blank">{{ v.vuln_id }}</a>
                   {% elif v.vuln_type == "Exploit-DB" %}
-                    <a href="https://vulners.com/exploitdb/{{ v.vuln_id }}" target="_blank">{{ v.vuln_id }}</a>
+                  <a href="https://vulners.com/exploitdb/{{ v.vuln_id }}" target="_blank">{{ v.vuln_id }}</a>
                   {% else %}
-                    {{ v.vuln_id }}
+                  {{ v.vuln_id }}
                   {% endif %}
                 </td>
-                <td style="max-width: 300px; white-space: normal;">{{ v.description }}</td>
+                <td style="max-width: 400px; white-space: normal;">{{ v.description }}</td>
                 <td>{{ v.cvss }}</td>
                 <td>{{ v.severity }}</td>
               </tr>
@@ -71,12 +118,95 @@
   </div>
 </div>
 
+<!-- JavaScript -->
 <script>
-document.getElementById('searchInput').addEventListener('keyup', function () {
-  let query = this.value.toLowerCase();
-  document.querySelectorAll('#accordionDevices .card').forEach(function (card) {
-    let header = card.querySelector('.card-header').textContent.toLowerCase();
-    card.style.display = header.includes(query) ? '' : 'none';
+document.addEventListener('DOMContentLoaded', function () {
+  function normalizeText(text) {
+    return text.toString().toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s\-.:]/gi, "").replace(/\s+/g, " ").trim();
+  }
+
+  function advancedFilterRows(card) {
+    let port = normalizeText(document.getElementById("searchPort").value);
+    let product = normalizeText(document.getElementById("searchProduct").value);
+    let id = normalizeText(document.getElementById("searchID").value);
+    let type = normalizeText(document.getElementById("searchType").value);
+    let cvss = normalizeText(document.getElementById("searchCVSS").value);
+    let severity = normalizeText(document.getElementById("searchSeverity").value);
+
+    let rows = card.querySelectorAll("tbody tr");
+    let matchCount = 0;
+
+    rows.forEach(row => {
+      let cells = row.querySelectorAll("td");
+
+      let match =
+        (port === "" || normalizeText(cells[0].innerText).includes(port)) &&
+        (product === "" || normalizeText(cells[3].innerText).includes(product)) &&
+        (id === "" || normalizeText(cells[6].innerText).includes(id)) &&
+        (type === "" || normalizeText(cells[5].innerText).includes(type)) &&
+        (cvss === "" || normalizeText(cells[8].innerText).includes(cvss)) &&
+        (severity === "" || normalizeText(cells[9].innerText).includes(severity));
+
+      row.style.display = match ? "" : "none";
+      if (match) matchCount++;
+    });
+
+    const badge = card.querySelector(".advanced-search-count");
+    const hasSearch = port || product || id || type || cvss || severity;
+
+    if (badge) {
+      if (hasSearch && matchCount > 0) {
+        badge.querySelector('.count').innerText = matchCount;
+        badge.style.display = "inline-block";
+        card.style.display = "";
+      } else {
+        badge.style.display = "none";
+        card.style.display = hasSearch ? "none" : "";
+      }
+    }
+  }
+
+  ["searchPort", "searchProduct", "searchID", "searchCVSS", "searchSeverity", "searchType"].forEach(id => {
+    document.getElementById(id).addEventListener("input", () => {
+      document.querySelectorAll("#accordionDevices .card").forEach(card => advancedFilterRows(card));
+    });
+  });
+
+  document.getElementById('searchInput').addEventListener('input', function () {
+    const query = normalizeText(this.value);
+    document.querySelectorAll('#accordionDevices .card').forEach(card => {
+      let header = normalizeText(card.querySelector('.card-header').textContent);
+      card.style.display = header.includes(query) ? '' : 'none';
+    });
+  });
+
+  document.querySelectorAll('#accordionDevices .card').forEach(card => advancedFilterRows(card));
+
+  document.querySelectorAll('.export-csv-btn').forEach(btn => {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const card = btn.closest('.card');
+      const table = card.querySelector('table');
+      const rows = Array.from(table.querySelectorAll('tr'));
+      const csv = rows.map(row =>
+        Array.from(row.querySelectorAll('th,td'))
+          .map(cell => `"${cell.innerText.replace(/"/g, '""')}"`)
+          .join(',')
+      ).join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const ip = card.querySelector('strong').innerText.trim();
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'vulnerabilidades_' + ip + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
   });
 });
 </script>
