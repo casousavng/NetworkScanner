@@ -271,3 +271,37 @@ body {
 .resposta-ia a:hover {
   text-decoration: underline;
 }
+
+/* === Estilos para o modo escuro === */
+body.dark-mode {
+  background-color: #181a1b !important;
+  color: #f1f1f1 !important;
+}
+body.dark-mode .sidebar {
+  background-color: #23272b !important;
+  color: #f1f1f1 !important;
+}
+body.dark-mode .content {
+  background-color: #181a1b !important;
+  color: #f1f1f1 !important;
+}
+body.dark-mode .nav-link,
+body.dark-mode .btn,
+body.dark-mode .form-control {
+  background-color: #23272b !important;
+  color: #f1f1f1 !important;
+  border-color: #444 !important;
+}
+body.dark-mode .nav-link.active,
+body.dark-mode .nav-link:hover {
+  background-color: #343a40 !important;
+  color: #fff !important;
+}
+body.dark-mode .btn-outline-dark {
+  color: #f1f1f1 !important;
+  border-color: #f1f1f1 !important;
+}
+body.dark-mode .btn-outline-dark:hover {
+  background-color: #f1f1f1 !important;
+  color: #23272b !important;
+}

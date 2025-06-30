@@ -39,6 +39,11 @@
           <button class="btn btn-outline-primary w-100" id="fullscreenBtn" onclick="toggleFullScreen()">
             <i class="bi bi-arrows-fullscreen"></i> <span class="label">Tela cheia</span>
           </button>
+            <!-- MODO ESCURO
+            <button class="btn btn-outline-dark w-100" id="darkModeBtn" type="button" onclick="toggleDarkMode()" style="display: block !important; z-index: 9999;">
+            <i class="bi bi-moon"></i> <span class="label">Modo escuro</span>
+            </button>
+            -->
         </li>
         <li><hr class="nav-link disabled mt-auto mb-1 network-info collapsible-item"></li>
       </ul>
@@ -184,6 +189,25 @@
         btnFullscreen.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> Sair da tela cheia';
       }
     });
+
+
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+      if (document.body.classList.contains('dark-mode')) {
+        localStorage.setItem('darkMode', 'true');
+        document.getElementById('darkModeBtn').innerHTML = '<i class="bi bi-brightness-high"></i> <span class="label">Modo claro</span>';
+      } else {
+        localStorage.removeItem('darkMode');
+        document.getElementById('darkModeBtn').innerHTML = '<i class="bi bi-moon"></i> <span class="label">Modo escuro</span>';
+      }
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+      if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('darkModeBtn').innerHTML = '<i class="bi bi-brightness-high"></i> <span class="label">Modo claro</span>';
+      }
+    });
+
   </script>
 </body>
 </html>
