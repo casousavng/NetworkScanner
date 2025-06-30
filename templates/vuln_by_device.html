@@ -37,10 +37,15 @@
         </select>
       </div>
       <div class="col-md-2 mb-2">
-        <input type="text" id="searchCVSS" class="form-control" placeholder="CVSS">
+        <input type="text" id="searchCVSS" class="form-control" placeholder="Score">
       </div>
-      <div class="col-md-2 mb-2">
-        <input type="text" id="searchSeverity" class="form-control" placeholder="Severidade">
+      <div class="col-md-2 mb-2 d-flex align-items-end">
+        <button type="button" class="btn btn-primary w-100" id="clearFiltersBtn">
+          <i class="bi bi-search"></i> Limpar Filtros
+        </button>
+      </div>
+      <div class="col-md-2 mb-2" hidden>
+        <input type="text" id="searchSeverity" class="form-control" placeholder="Severidade" hidden>
       </div>
     </div>
   </div>
@@ -82,8 +87,7 @@
                 <th>Tipo</th>
                 <th>ID</th>
                 <th>Descrição</th>
-                <th>CVSS</th>
-                <th>Severidade</th>
+                <th>Score</th>
               </tr>
             </thead>
             <tbody>
@@ -105,8 +109,15 @@
                   {% endif %}
                 </td>
                 <td style="max-width: 400px; white-space: normal;">{{ v.description }}</td>
-                <td>{{ v.cvss }}</td>
-                <td>{{ v.severity }}</td>
+                <td>
+                  {% if v.vuln_type == "CVE" %}
+                  {{ v.cvss }}
+                  {% elif v.vuln_type == "Exploit-DB" %}
+                  {{ v.severity }}
+                  {% else %}
+                  {{ v.cvss or v.severity }}
+                  {% endif %}
+                </td>
               </tr>
               {% endfor %}
             </tbody>
@@ -207,6 +218,25 @@ document.addEventListener('DOMContentLoaded', function () {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     });
+  });
+});
+
+document.getElementById('clearFiltersBtn').addEventListener('click', function () {
+  document.getElementById('searchPort').value = '';
+  document.getElementById('searchProduct').value = '';
+  document.getElementById('searchID').value = '';
+  document.getElementById('searchType').value = '';
+  document.getElementById('searchCVSS').value = '';
+  document.getElementById('searchSeverity').value = '';
+  // Mostrar todas as linhas das tabelas
+  document.querySelectorAll('#accordionDevices .card').forEach(card => {
+    card.querySelectorAll('tbody tr').forEach(row => {
+      row.style.display = '';
+    });
+    // Esconder badge de contagem de pesquisa avançada
+    const badge = card.querySelector('.advanced-search-count');
+    if (badge) badge.style.display = 'none';
+    card.style.display = '';
   });
 });
 </script>

@@ -1,41 +1,97 @@
 {% extends "base.html" %}
 {% block body %}
 <div class="container mt-4">
-    <div class="card-body">
-              <h2 class="card-title mb-4" style="font-weight: 700; color: #2c3e50;">
-        <i class="bi bi-file-earmark-bar-graph"></i> Relatórios de Dispositivos
-      </h2>
-        <p class="card-text">
-            Aqui pode exportar relatórios dos dispositivos encontrados na rede. Escolha o tipo de relatório que melhor se adequa às suas necessidades:
-        </p>
-        <div class="row mt-4">
-            <div class="col-12 mb-3">
-                <div class="card border-secondary h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">CSV Simples</h5>
-                        <p class="card-text">
-                            Exporta uma lista básica dos dispositivos, incluindo apenas informações essenciais como IP, Mac Address e nome do host.
-                        </p>
-                        <a href="{{ url_for('export_csv_devices') }}" class="btn btn-outline-primary w-100">Exportar CSV Simples</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 mb-3">
-                <div class="card border-secondary h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">CSV Completo</h5>
-                        <p class="card-text">
-                            Exporta um relatório detalhado com todas as informações disponíveis sobre cada dispositivo, incluindo portas abertas, vulnerabilidades e outros detalhes.
-                        </p>
-                        <a href="{{ url_for('export_csv_devices_full') }}" class="btn btn-outline-success w-100">Exportar CSV Completo</a>
-                    </div>
-                </div>
-            </div>
+  <div class="card-body">
+    <h2 class="card-title mb-4" style="font-weight: 700; color: #2c3e50;">
+      <i class="bi bi-file-earmark-bar-graph"></i> Relatórios de Dispositivos
+    </h2>
+    <p class="card-text">
+      Aqui pode exportar relatórios dos dispositivos encontrados na rede. Escolha o tipo de relatório que melhor se adequa às suas necessidades:
+    </p>
+    <div class="row mt-4">
+      <!-- CSV Simples -->
+      <div class="col-12 mb-3">
+        <div class="card border-secondary h-100">
+          <div class="card-body">
+            <h5 class="card-title">CSV Simples</h5>
+            <p class="card-text">
+              Exporta uma lista básica dos dispositivos, incluindo apenas informações essenciais como IP, Mac Address e nome do host.
+            </p>
+            <a href="{{ url_for('export_csv_devices') }}" class="btn btn-outline-primary w-100 mb-2">Exportar CSV Simples</a>
+            <button class="btn btn-outline-info w-100" data-bs-toggle="modal" data-bs-target="#emailModalSimple">Enviar por Email</button>
+          </div>
         </div>
-        <hr>
-        <p class="text-muted small mt-3">
-            Os relatórios são gerados no formato CSV, compatível com Excel e outras ferramentas de análise de dados.
-        </p>
+      </div>
+
+      <!-- CSV Completo -->
+      <div class="col-12 mb-3">
+        <div class="card border-secondary h-100">
+          <div class="card-body">
+            <h5 class="card-title">CSV Completo</h5>
+            <p class="card-text">
+              Exporta um relatório detalhado com todas as informações disponíveis sobre cada dispositivo, incluindo portas abertas, vulnerabilidades e outros detalhes.
+            </p>
+            <a href="{{ url_for('export_csv_devices_full') }}" class="btn btn-outline-success w-100 mb-2">Exportar CSV Completo</a>
+            <button class="btn btn-outline-info w-100" data-bs-toggle="modal" data-bs-target="#emailModalFull">Enviar por Email</button>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <hr>
+    <p class="text-muted small mt-3">
+      Os relatórios são gerados no formato CSV, compatível com Excel e outras ferramentas de análise de dados.
+    </p>
+  </div>
+</div>
+
+<!-- Modal para CSV Simples -->
+<div class="modal fade" id="emailModalSimple" tabindex="-1" aria-labelledby="emailModalLabelSimple" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('send_email_csv', type='simple') }}">
+        <input type="hidden" name="type" value="simple">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="emailModalLabelSimple">Enviar CSV Simples por Email</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="emailSimple" class="form-label">Endereço de Email</label>
+            <input type="email" class="form-control" id="emailSimple" name="email" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Enviar</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal para CSV Completo -->
+<div class="modal fade" id="emailModalFull" tabindex="-1" aria-labelledby="emailModalLabelFull" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('send_email_csv', type='full') }}">
+        <input type="hidden" name="type" value="full">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="emailModalLabelFull">Enviar CSV Completo por Email</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="emailFull" class="form-label">Endereço de Email</label>
+            <input type="email" class="form-control" id="emailFull" name="email" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Enviar</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+      </div>
+    </form>
+  </div>
 </div>
 {% endblock %}
