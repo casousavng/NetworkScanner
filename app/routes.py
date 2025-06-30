@@ -6,6 +6,7 @@ import json
 import ipaddress
 import netifaces
 import markdown2
+import re
 
 from flask import (
     render_template,
@@ -370,7 +371,7 @@ def init_app(app):
         db = get_db()
         cur = db.cursor()
 
-        # Obter apenas dispositivos com CVEs ou ExploitDBs associados
+        # Buscar dispositivos com CVEs ou EDBs
         cur.execute("""
             SELECT DISTINCT d.ip, d.hostname
             FROM devices d
@@ -383,27 +384,96 @@ def init_app(app):
         devices = cur.fetchall()
 
         device_vulns = {}
+
         for device in devices:
             ip = device['ip']
             hostname = device['hostname']
 
-            # Buscar vulnerabilidades com CVE ou EBD
             cur.execute("""
-                SELECT p.port, p.service, p.product, p.version,
-                    c.cve_id, c.description, c.cvss,
-                    e.ebd_id, e.reference_url, e.severity
+                SELECT p.port, p.protocol, p.state, p.service, p.product, p.version,
+                    c.cve_id, c.description AS cve_desc, c.cvss,
+                    e.ebd_id, e.ebds AS edb_desc, e.severity, e.reference_url
                 FROM ports p
-                JOIN vulnerabilities v ON v.port_id = p.id
+                LEFT JOIN vulnerabilities v ON v.port_id = p.id
                 LEFT JOIN cves c ON c.port_id = p.id
                 LEFT JOIN edbs e ON e.vulnerability_id = v.id
                 WHERE p.ip = ? AND (c.cve_id IS NOT NULL OR e.ebd_id IS NOT NULL)
             """, (ip,))
-            vulns = cur.fetchall()
+            rows = cur.fetchall()
 
-            if vulns:
+            vulns_rows = []
+            seen_entries = set()  # Para evitar duplicados
+
+            for row in rows:
+                port_str = f"{row['port']}/{row['protocol']}"
+
+                # CVE
+                if row['cve_id']:
+                    cve_key = (port_str, 'CVE', row['cve_id'])
+                    if cve_key not in seen_entries:
+                        seen_entries.add(cve_key)
+                        vulns_rows.append({
+                            'port': port_str,
+                            'state': row['state'],
+                            'service': row['service'],
+                            'product': row['product'],
+                            'version': row['version'],
+                            'vuln_type': 'CVE',
+                            'vuln_id': row['cve_id'],
+                            'description': row['cve_desc'] or '-',
+                            'cvss': row['cvss'] or '-',
+                            'severity': '-',
+                            'reference_url': None
+                        })
+
+                # EDB
+                if row['ebd_id'] and row['edb_desc']:
+                    pattern = r'(CVE-\d{4}-\d+|EDB-ID:\d+)\s[\d\.]+\shttps?://[^\s]+(?:\s\*EXPLOIT\*)?'
+                    matches = re.finditer(pattern, row['edb_desc'])
+
+                    edb_desc_found = False
+                    for match in matches:
+                        full_desc = match.group(0)
+                        edb_key = (port_str, 'EDB', row['ebd_id'], full_desc)
+                        if edb_key not in seen_entries:
+                            seen_entries.add(edb_key)
+                            vulns_rows.append({
+                                'port': port_str,
+                                'state': row['state'],
+                                'service': row['service'],
+                                'product': row['product'],
+                                'version': row['version'],
+                                'vuln_type': 'Exploit-DB',
+                                'vuln_id': row['ebd_id'],
+                                'description': full_desc,
+                                'cvss': '-',
+                                'severity': row['severity'] or '-',
+                                'reference_url': row['reference_url']
+                            })
+                            edb_desc_found = True
+
+                    if not edb_desc_found:
+                        edb_key = (port_str, 'EDB', row['ebd_id'], row['edb_desc'])
+                        if edb_key not in seen_entries:
+                            seen_entries.add(edb_key)
+                            vulns_rows.append({
+                                'port': port_str,
+                                'state': row['state'],
+                                'service': row['service'],
+                                'product': row['product'],
+                                'version': row['version'],
+                                'vuln_type': 'Exploit-DB',
+                                'vuln_id': row['ebd_id'],
+                                'description': row['edb_desc'],
+                                'cvss': '-',
+                                'severity': row['severity'] or '-',
+                                'reference_url': row['reference_url']
+                            })
+
+            if vulns_rows:
                 device_vulns[ip] = {
                     'hostname': hostname,
-                    'vulnerabilities': vulns
+                    'vulnerabilities': vulns_rows
                 }
 
         return render_template(
