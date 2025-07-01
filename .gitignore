@@ -8,6 +8,9 @@ venv
 .app/db/__pycache__/
 .app/extensions/__pycache__/
 .app/static/__pycache__/
+.cve_edb_data/
+cve_edb_data/
+cve_edb_data
 # Ignorar ficheiros de cache do Python
 __pycache__/
 *.pyc
