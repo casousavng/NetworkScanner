@@ -92,110 +92,117 @@
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const sidebar = document.getElementById('sidebar');
-      const toggleBtn = document.getElementById('toggleSidebarBtn');
-      const icon = toggleBtn.querySelector('i');
-      const btnFullscreen = document.getElementById('fullscreenBtn');
+document.addEventListener("DOMContentLoaded", function () {
+  const sidebar = document.getElementById('sidebar');
+  const toggleBtn = document.getElementById('toggleSidebarBtn');
+  const icon = toggleBtn.querySelector('i');
+  const btnFullscreen = document.getElementById('fullscreenBtn');
 
-      toggleBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-        icon.classList.toggle('bi-chevron-left');
-        icon.classList.toggle('bi-chevron-right');
-      });
-
-      let isScanning = false;
-
-      function showSpinner() {
-        document.getElementById('loadingSpinner').style.display = 'flex';
-      }
-
-      function hideSpinner() {
-        document.getElementById('loadingSpinner').style.display = 'none';
-      }
-
-      document.getElementById('startScanBtn')?.addEventListener('click', function (e) {
-        if (isScanning) return;
-        e.preventDefault();
-
-        if (window.location.pathname !== '/') {
-          localStorage.setItem('startScanOnLoad', 'true');
-          window.location.href = '/';
-        } else {
-          iniciarScan();
-        }
-      });
-
-      function iniciarScan() {
-        isScanning = true;
-        showSpinner();
-        document.querySelectorAll('.menu-link').forEach(link => link.classList.add('disabled-link'));
-
-        fetch('/scan')
-          .then(res => res.json())
-          .then(data => {
-            hideSpinner();
-            isScanning = false;
-            document.querySelectorAll('.menu-link').forEach(link => link.classList.remove('disabled-link'));
-            window.location.href = '/';
-          })
-          .catch(err => {
-            hideSpinner();
-            isScanning = false;
-            document.querySelectorAll('.menu-link').forEach(link => link.classList.remove('disabled-link'));
-            console.error('Erro ao iniciar o scan:', err);
-          });
-      }
-
-      window.fecharApp = function () {
-        fetch('/shutdown', { method: 'POST' })
-          .then(res => {
-            if (res.ok) {
-              window.close();
-            } else {
-              console.error('Erro ao tentar fechar a aplicação');
-            }
-          });
-      };
-
-      window.toggleFullScreen = function () {
-        const docElm = document.documentElement;
-        if (!document.fullscreenElement) {
-          docElm.requestFullscreen?.() || docElm.webkitRequestFullscreen?.() || docElm.mozRequestFullScreen?.() || docElm.msRequestFullscreen?.();
-          btnFullscreen.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> Sair da tela cheia';
-          localStorage.setItem('fullscreen', 'true');
-        } else {
-          document.exitFullscreen?.() || document.webkitExitFullscreen?.() || document.mozCancelFullScreen?.() || document.msExitFullscreen?.();
-          btnFullscreen.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> Tela cheia';
-          localStorage.removeItem('fullscreen');
-        }
-      };
-
-      if (localStorage.getItem('fullscreen') === 'true') {
-        const docElm = document.documentElement;
-        docElm.requestFullscreen?.();
-        btnFullscreen.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> Sair da tela cheia';
-      }
-    });
-
-    // Modo escuro -> EM TESTES
-    function toggleDarkMode() {
-      document.body.classList.toggle('dark-mode');
-      if (document.body.classList.contains('dark-mode')) {
-        localStorage.setItem('darkMode', 'true');
-        document.getElementById('darkModeBtn').innerHTML = '<i class="bi bi-brightness-high"></i> <span class="label">Modo claro</span>';
-      } else {
-        localStorage.removeItem('darkMode');
-        document.getElementById('darkModeBtn').innerHTML = '<i class="bi bi-moon"></i> <span class="label">Modo escuro</span>';
-      }
+  // --- Lógica para persistir o estado da sidebar ---
+  function applySidebarState(isCollapsed) {
+    if (isCollapsed) {
+      sidebar.classList.add('collapsed');
+      icon.classList.remove('bi-chevron-left');
+      icon.classList.add('bi-chevron-right');
+    } else {
+      sidebar.classList.remove('collapsed');
+      icon.classList.remove('bi-chevron-right');
+      icon.classList.add('bi-chevron-left');
     }
-    document.addEventListener("DOMContentLoaded", function () {
-      if (localStorage.getItem('darkMode') === 'true') {
-        document.body.classList.add('dark-mode');
-        document.getElementById('darkModeBtn').innerHTML = '<i class="bi bi-brightness-high"></i> <span class="label">Modo claro</span>';
-      }
-    });
+  }
 
+  // Ao carregar a página, verifica o localStorage
+  const storedSidebarState = localStorage.getItem('sidebarCollapsed');
+  if (storedSidebarState === 'true') {
+    applySidebarState(true);
+  } else {
+    // Garante que a sidebar está no estado padrão (expandida) se não houver estado salvo
+    applySidebarState(false);
+  }
+
+  toggleBtn.addEventListener('click', () => {
+    const isCurrentlyCollapsed = sidebar.classList.contains('collapsed');
+    applySidebarState(!isCurrentlyCollapsed); // Alterna o estado
+
+    // Salva o novo estado no localStorage
+    localStorage.setItem('sidebarCollapsed', !isCurrentlyCollapsed);
+  });
+  // --- Fim da lógica para persistir o estado da sidebar ---
+
+
+  let isScanning = false;
+
+  function showSpinner() {
+    document.getElementById('loadingSpinner').style.display = 'flex';
+  }
+
+  function hideSpinner() {
+    document.getElementById('loadingSpinner').style.display = 'none';
+  }
+
+  document.getElementById('startScanBtn')?.addEventListener('click', function (e) {
+    if (isScanning) return;
+    e.preventDefault();
+
+    if (window.location.pathname !== '/') {
+      localStorage.setItem('startScanOnLoad', 'true');
+      window.location.href = '/';
+    } else {
+      iniciarScan();
+    }
+  });
+
+  function iniciarScan() {
+    isScanning = true;
+    showSpinner();
+    document.querySelectorAll('.menu-link').forEach(link => link.classList.add('disabled-link'));
+
+    fetch('/scan')
+      .then(res => res.json())
+      .then(data => {
+        hideSpinner();
+        isScanning = false;
+        document.querySelectorAll('.menu-link').forEach(link => link.classList.remove('disabled-link'));
+        window.location.href = '/';
+      })
+      .catch(err => {
+        hideSpinner();
+        isScanning = false;
+        document.querySelectorAll('.menu-link').forEach(link => link.classList.remove('disabled-link'));
+        console.error('Erro ao iniciar o scan:', err);
+      });
+  }
+
+  window.fecharApp = function () {
+    fetch('/shutdown', { method: 'POST' })
+      .then(res => {
+        if (res.ok) {
+          window.close();
+        } else {
+          console.error('Erro ao tentar fechar a aplicação');
+        }
+      });
+  };
+
+  window.toggleFullScreen = function () {
+    const docElm = document.documentElement;
+    if (!document.fullscreenElement) {
+      docElm.requestFullscreen?.() || docElm.webkitRequestFullscreen?.() || docElm.mozRequestFullScreen?.() || docElm.msRequestFullscreen?.();
+      btnFullscreen.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> Sair da tela cheia';
+      localStorage.setItem('fullscreen', 'true');
+    } else {
+      document.exitFullscreen?.() || document.webkitExitFullscreen?.() || document.mozCancelFullScreen?.() || document.msExitFullscreen?.();
+      btnFullscreen.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> Tela cheia';
+      localStorage.removeItem('fullscreen');
+    }
+  };
+
+  if (localStorage.getItem('fullscreen') === 'true') {
+    const docElm = document.documentElement;
+    docElm.requestFullscreen?.();
+    btnFullscreen.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> Sair da tela cheia';
+  }
+});
     // Atualiza o relógio mini
     // Exibe a data e hora atual no formato DD.MM.AAAA HH:MM:
     function updateMiniClock() {
@@ -230,3 +237,6 @@
   </script>
 </body>
 </html>
+
+
+
