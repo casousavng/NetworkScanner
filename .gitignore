@@ -40,3 +40,4 @@ data/rede.db
 **/*.db
 
 /TESTES/
+cve_edb_data/
