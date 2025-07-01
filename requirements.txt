@@ -3,6 +3,8 @@ Flask-SocketIO
 Flask-Login
 Flask-Dotenv
 flask-mail
+flask_sqlalchemy
+flask_bcrypt
 plotly
 requests
 networkx

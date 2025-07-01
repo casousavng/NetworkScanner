@@ -265,3 +265,90 @@ def send_report_email(to_email, csv_path):
         """
 
         mail.send(msg)
+
+def send_access_token_email(recipient_email, token, user_name, token_expiration_hours=24):
+    """
+    Envia um email com o token de acesso para autenticação no sistema.
+    """
+    msg = Message(
+        subject="🔐 Token de Acesso - NetworkScanner",
+        sender="scanner@networkscanner.com",
+        recipients=[recipient_email]
+    )
+    
+    # Texto simples
+    msg.body = f"""
+Olá {user_name},
+
+Foi solicitado um token de acesso para o NetworkScanner.
+
+SEU TOKEN DE ACESSO:
+{token}
+
+INSTRUÇÕES:
+1. Aceda à página de login do NetworkScanner
+2. Insira o seu username e password
+3. Quando solicitado, insira o token acima no campo "Token de Acesso"
+4. Clique em "Fazer Login"
+
+IMPORTANTE:
+- Este token é válido por {token_expiration_hours} horas
+- Não partilhe este token com ninguém
+- Se não solicitou este token, ignore este email
+
+---
+NetworkScanner Security System
+Gerado automaticamente em {current_app.config.get('SERVER_NAME', 'localhost')}
+"""
+
+    # HTML formatado
+    msg.html = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9f9f9; padding: 20px;">
+        <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <h2 style="color: #2c3e50; text-align: center; margin-bottom: 30px;">
+                🔐 Token de Acesso - NetworkScanner
+            </h2>
+            
+            <p style="color: #34495e; font-size: 16px;">Olá <strong>{escape(user_name)}</strong>,</p>
+            
+            <p style="color: #34495e;">Foi solicitado um token de acesso para o NetworkScanner.</p>
+            
+            <div style="background-color: #ecf0f1; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: center;">
+                <h3 style="color: #e74c3c; margin-bottom: 10px;">SEU TOKEN DE ACESSO:</h3>
+                <div style="font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold; 
+                           background-color: #34495e; color: white; padding: 15px; border-radius: 5px; 
+                           letter-spacing: 2px; word-break: break-all;">
+                    {token}
+                </div>
+            </div>
+            
+            <div style="background-color: #e8f4fd; padding: 15px; border-left: 4px solid #3498db; margin: 20px 0;">
+                <h4 style="color: #2980b9; margin-top: 0;">📋 INSTRUÇÕES:</h4>
+                <ol style="color: #34495e; margin: 0;">
+                    <li>Aceda à página de login do NetworkScanner</li>
+                    <li>Insira o seu <strong>username</strong> e <strong>password</strong></li>
+                    <li>Quando solicitado, insira o token acima no campo "Token de Acesso"</li>
+                    <li>Clique em "<strong>Fazer Login</strong>"</li>
+                </ol>
+            </div>
+            
+            <div style="background-color: #fdf2e9; padding: 15px; border-left: 4px solid #f39c12; margin: 20px 0;">
+                <h4 style="color: #e67e22; margin-top: 0;">⚠️ IMPORTANTE:</h4>
+                <ul style="color: #34495e; margin: 0;">
+                    <li>Este token é válido por <strong>{token_expiration_hours} horas</strong></li>
+                    <li><strong>Não partilhe</strong> este token com ninguém</li>
+                    <li>Se não solicitou este token, <strong>ignore este email</strong></li>
+                </ul>
+            </div>
+            
+            <hr style="border: none; border-top: 1px solid #bdc3c7; margin: 30px 0;">
+            
+            <p style="color: #7f8c8d; font-size: 12px; text-align: center; margin: 0;">
+                NetworkScanner Security System<br>
+                Gerado automaticamente em {escape(current_app.config.get('SERVER_NAME', 'localhost'))}
+            </p>
+        </div>
+    </div>
+    """
+
+    mail.send(msg)

@@ -23,6 +23,7 @@ instance/
 *.sqlite3
 *.json
 *.csv
+*.txt
 
 # Ignorar ficheiros do macOS
 .DS_Store
@@ -45,3 +46,4 @@ cve_edb_data/
 .DS_Store
 .DS_Store
 .DS_Store
+.txt

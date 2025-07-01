@@ -651,19 +651,23 @@ def init_app(app):
     # Rotas para tratamento de erros
     @app.errorhandler(404)
     def handle_404(e):
+        print("Erro interno:", e) 
         return render_template("error.html", error=e, network=network, router_ip=gateway), 404
 
     @app.errorhandler(403)
     def handle_403(e):
+        print("Erro interno:", e) 
         return render_template("error.html", error=e, network=network, router_ip=gateway), 403
 
     @app.errorhandler(500)
     def handle_500(e):
+        print("Erro interno:", e) 
         return render_template("error.html", error=e, network=network, router_ip=gateway), 500
 
     @app.errorhandler(Exception)
     def handle_exception(e):
         # Se for HTTPException (como 404, etc), deixa o handler específico lidar
+        print("Erro interno:", e) # Log do erro para debug
         if isinstance(e, HTTPException):
             return render_template("error.html", error=e, network=network, router_ip=gateway), e.code
 
