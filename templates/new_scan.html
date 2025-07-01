@@ -141,7 +141,7 @@
       submitBtn.disabled = true;
       setTimeout(function() {
         const btnIds = [
-          'scan', 'mapa', 'dispositivos', 'historico',
+          'scan', 'mapa', 'dispositivos', 'vulnerabilidades' ,'historico',
           'assistenteIA', 'relatorios', 'ajuda', 'sobre', 'reportarProblema'
         ];
         btnIds.forEach(id => {
@@ -166,7 +166,7 @@
 
       scanMessage.classList.remove('d-none');
       scanMessage2.classList.remove('d-none');
-      scanMessage2.innerHTML = '<i class="bi bi-exclamation-triangle"></i> POR FAVOR NÃO FECHE OU FAÇA REFRESH NA PÁGINA DURANTE O SCAN!';
+      scanMessage2.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Atenção: Não feche nem atualize a página enquanto o scan está em andamento para garantir resultados completos!';
       scanMessage.innerHTML = '<i class="bi bi-clock-history"></i> O scan pode demorar alguns minutos. Será redirecionado para o mapa de rede quando terminar.';
     });
   });
