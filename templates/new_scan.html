@@ -6,23 +6,25 @@
         <i class="bi bi-search"></i> Novo Scan de Rede
       </h2>
       <hr>
-      <div class="mb-3">
-        <p class="lead mb-1"><strong>Escolha o tipo de scan que pretende realizar:</strong></p>
-        <p class="text-muted small mb-2">
-          <i class="bi bi-info-circle"></i>
-          A ordem de scan determina a forma como os IPs são verificados e o tempo de execução do scan.
-        </p>
-        <div class="alert alert-secondary py-2 mb-0">
-          <span class="fw-bold">Rede Atual:</span><br>
+
+              <div class="alert alert-secondary py-2 mb-0">
+          <span class="fw-bold">Rede Atual<br></span>
           <span class="badge bg-primary me-1">Endereço de Rede: {{ network.addr }}</span>
           <span class="badge bg-success me-1">IP do Router: {{ router_ip }}</span>
           <span class="badge bg-info text-dark me-1">Máscara: {{ network.netmask }}</span>
           <span class="badge bg-warning text-dark">Broadcast: {{ network.broadcast }}</span>
         </div>
-      </div>
+        <hr>
+      <div class="mb-2">
+        <p class="fw-semibold mb-2"><i class="bi bi-box-arrow-in-right"></i> Escolha o tipo de scan que pretende realizar</p>
+        <p class="text-muted small mb-2">
+          <i class="bi bi-info-circle"></i>
+          A ordem de scan determina a forma como os IPs são verificados e o tempo de execução do scan.
+        </p>
+        </div>
 
       <form method="POST" action="{{ url_for('do_scan') }}" id="scanForm" autocomplete="off">
-        <div class="form-group mb-4">
+        <div class="form-group mb-2">
           <label class="form-label fw-semibold">Pesquisar:</label><br>
           <div class="btn-group" role="group" aria-label="Tipo de Scan">
             <input type="radio" class="btn-check" name="scan_type" id="scanAll" value="all" checked>
@@ -52,7 +54,7 @@
 
         <hr>
         <div class="mb-4">
-          <p class="fw-semibold mb-1"><i class="bi bi-box-arrow-in-right"></i> Escolha as portas que pretende testar:</p>
+          <p class="fw-semibold mb-1"><i class="bi bi-box-arrow-in-right"></i> Escolha as portas que pretende testar</p>
           <p class="text-muted small mb-2">
             Separe um intervalo de portas com um traço (-) ou portas específicas com vírgulas (,).<br>
             Deixe em branco para pesquisar todas as portas (1-65535). <span class="text-danger">Isto pode demorar mais tempo.</span>

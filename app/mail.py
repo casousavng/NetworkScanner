@@ -1,4 +1,5 @@
 from flask_mail import Mail, Message
+from flask import current_app
 from markupsafe import escape
 import ipaddress
 
@@ -230,3 +231,37 @@ def send_scan_completed_email(recipient_email, data):
     """
 
     mail.send(msg)
+
+def send_report_email(to_email, csv_path):
+    """
+    Envia um email com o relatório CSV em anexo para o email especificado.
+    """
+    
+
+    with current_app.app_context():
+        msg = Message(
+            subject="📊 Relatório CSV - NetworkScanner",
+            sender="scanner@networkscanner.com",
+            recipients=[to_email]
+        )
+
+        with open(csv_path, "rb") as f:
+            csv_data = f.read()
+
+        filename = csv_path.split('/')[-1] if '/' in csv_path else csv_path
+        msg.attach(filename, "text/csv", csv_data)
+
+        msg.body = (
+            "Segue em anexo o relatório CSV solicitado.\n\n"
+            "Este relatório foi gerado automaticamente pelo sistema NetworkScanner."
+        )
+
+        msg.html = f"""
+        <h2 style="color: #16a085;">📊 Relatório CSV Gerado</h2>
+        <p>Segue em anexo o relatório CSV solicitado.</p>
+        <p style="margin-top: 20px; font-size: 0.9em; color: #7f8c8d;">
+            Este relatório foi gerado automaticamente pelo sistema NetworkScanner.
+        </p>
+        """
+
+        mail.send(msg)

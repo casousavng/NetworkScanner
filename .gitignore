@@ -21,6 +21,8 @@ __pycache__/
 instance/
 *.db
 *.sqlite3
+*.json
+*.csv
 
 # Ignorar ficheiros do macOS
 .DS_Store
@@ -39,3 +41,4 @@ data/rede.db
 
 /TESTES/
 cve_edb_data/
+.DS_Store

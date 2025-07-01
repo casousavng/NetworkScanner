@@ -1,3 +1,4 @@
+from http.client import HTTPException
 import os
 import signal
 import csv
@@ -6,6 +7,7 @@ import json
 import ipaddress
 import netifaces
 import markdown2
+import re
 
 from flask import (
     render_template,
@@ -19,13 +21,16 @@ from flask import (
 from flask_login import login_required
 from smtplib import SMTPServerDisconnected
 from google.api_core.exceptions import ResourceExhausted
+from flask import render_template, g
+from werkzeug.exceptions import HTTPException, Forbidden, NotFound, InternalServerError
 
-from .mail import send_issue_report, allowed_file, MAX_FILE_SIZE
+from .mail import send_issue_report, send_report_email, allowed_file, MAX_FILE_SIZE
 from .ai import fazer_pergunta
 from .db import get_db
 from .scan import scan_and_store
 from .extensions import socketio
 from .graph import build_network_data
+from .csv_files import generate_csv_simple, generate_csv_full
 
 import plotly
 
@@ -287,20 +292,20 @@ def init_app(app):
             screenshot = request.files.get('screenshot')
 
             if not name or not email or not issue_text:
-                flash('Por favor, preencha todos os campos antes de enviar.', 'warning')
+                flash('Por favor, preencha todos os campos antes de enviar.', 'report_warning')
                 return redirect(url_for('report_issue'))
 
             if screenshot and screenshot.filename != '':
                 if not allowed_file(screenshot.filename):
-                    flash('Formato de ficheiro não permitido. Use apenas JPG, PNG ou GIF.', 'danger')
+                    flash('Formato de ficheiro não permitido. Use apenas JPG, PNG ou GIF.', 'report_error')
                     return redirect(url_for('report_issue'))
 
-                screenshot.seek(0, 2)  # move para o fim do ficheiro
+                screenshot.seek(0, 2)
                 file_size = screenshot.tell()
-                screenshot.seek(0)  # volta ao início para leitura posterior
+                screenshot.seek(0)
 
                 if file_size > MAX_FILE_SIZE:
-                    flash('Ficheiro demasiado grande. Tamanho máximo: 2 MB.', 'danger')
+                    flash('Ficheiro demasiado grande. Tamanho máximo: 2 MB.', 'report_error')
                     return redirect(url_for('report_issue'))
 
             issue_data = {
@@ -312,15 +317,15 @@ def init_app(app):
 
             try:
                 send_issue_report(issue_data, "report@networkscanner.com")
-                flash("Obrigado por reportar o problema. Entraremos em contacto em breve.", "success")
-                return redirect(url_for('report_issue')) # Redireciona para a mesma página após o envio podemos optar para encaminhar para uma página de agradecimento
+                flash("Obrigado por reportar o problema. Entraremos em contacto em breve.", "report_success")
+                return redirect(url_for('report_issue'))
             except SMTPServerDisconnected as e:
                 print(f"Erro SMTPServerDisconnected: {e}")
-                flash("Ocorreu um erro ao enviar o email. Por favor, tente novamente mais tarde.", "danger")
+                flash("Ocorreu um erro ao enviar o email. Por favor, tente novamente mais tarde.", "report_error")
                 return redirect(url_for('report_issue'))
             except Exception as e:
                 print(f"Erro inesperado: {e}")
-                flash("Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.", "danger")
+                flash("Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.", "report_error")
                 return redirect(url_for('report_issue'))
 
         return render_template('report_issue.html', network=network, router_ip=gateway)
@@ -370,7 +375,7 @@ def init_app(app):
         db = get_db()
         cur = db.cursor()
 
-        # Obter apenas dispositivos com CVEs ou ExploitDBs associados
+        # Buscar dispositivos com CVEs ou EDBs
         cur.execute("""
             SELECT DISTINCT d.ip, d.hostname
             FROM devices d
@@ -383,27 +388,96 @@ def init_app(app):
         devices = cur.fetchall()
 
         device_vulns = {}
+
         for device in devices:
             ip = device['ip']
             hostname = device['hostname']
 
-            # Buscar vulnerabilidades com CVE ou EBD
             cur.execute("""
-                SELECT p.port, p.service, p.product, p.version,
-                    c.cve_id, c.description, c.cvss,
-                    e.ebd_id, e.reference_url, e.severity
+                SELECT p.port, p.protocol, p.state, p.service, p.product, p.version,
+                    c.cve_id, c.description AS cve_desc, c.cvss,
+                    e.ebd_id, e.ebds AS edb_desc, e.severity, e.reference_url
                 FROM ports p
-                JOIN vulnerabilities v ON v.port_id = p.id
+                LEFT JOIN vulnerabilities v ON v.port_id = p.id
                 LEFT JOIN cves c ON c.port_id = p.id
                 LEFT JOIN edbs e ON e.vulnerability_id = v.id
                 WHERE p.ip = ? AND (c.cve_id IS NOT NULL OR e.ebd_id IS NOT NULL)
             """, (ip,))
-            vulns = cur.fetchall()
+            rows = cur.fetchall()
 
-            if vulns:
+            vulns_rows = []
+            seen_entries = set()  # Para evitar duplicados
+
+            for row in rows:
+                port_str = f"{row['port']}/{row['protocol']}"
+
+                # CVE
+                if row['cve_id']:
+                    cve_key = (port_str, 'CVE', row['cve_id'])
+                    if cve_key not in seen_entries:
+                        seen_entries.add(cve_key)
+                        vulns_rows.append({
+                            'port': port_str,
+                            'state': row['state'],
+                            'service': row['service'],
+                            'product': row['product'],
+                            'version': row['version'],
+                            'vuln_type': 'CVE',
+                            'vuln_id': row['cve_id'],
+                            'description': row['cve_desc'] or '-',
+                            'cvss': row['cvss'] or '-',
+                            'severity': '-',
+                            'reference_url': None
+                        })
+
+                # EDB
+                if row['ebd_id'] and row['edb_desc']:
+                    pattern = r'(CVE-\d{4}-\d+|EDB-ID:\d+)\s[\d\.]+\shttps?://[^\s]+(?:\s\*EXPLOIT\*)?'
+                    matches = re.finditer(pattern, row['edb_desc'])
+
+                    edb_desc_found = False
+                    for match in matches:
+                        full_desc = match.group(0)
+                        edb_key = (port_str, 'EDB', row['ebd_id'], full_desc)
+                        if edb_key not in seen_entries:
+                            seen_entries.add(edb_key)
+                            vulns_rows.append({
+                                'port': port_str,
+                                'state': row['state'],
+                                'service': row['service'],
+                                'product': row['product'],
+                                'version': row['version'],
+                                'vuln_type': 'Exploit-DB',
+                                'vuln_id': row['ebd_id'],
+                                'description': full_desc,
+                                'cvss': '-',
+                                'severity': row['severity'] or '-',
+                                'reference_url': row['reference_url']
+                            })
+                            edb_desc_found = True
+
+                    if not edb_desc_found:
+                        edb_key = (port_str, 'EDB', row['ebd_id'], row['edb_desc'])
+                        if edb_key not in seen_entries:
+                            seen_entries.add(edb_key)
+                            vulns_rows.append({
+                                'port': port_str,
+                                'state': row['state'],
+                                'service': row['service'],
+                                'product': row['product'],
+                                'version': row['version'],
+                                'vuln_type': 'Exploit-DB',
+                                'vuln_id': row['ebd_id'],
+                                'description': row['edb_desc'],
+                                'cvss': '-',
+                                'severity': row['severity'] or '-',
+                                'reference_url': row['reference_url']
+                            })
+
+            if vulns_rows:
                 device_vulns[ip] = {
                     'hostname': hostname,
-                    'vulnerabilities': vulns
+                    'vulnerabilities': vulns_rows
                 }
 
         return render_template(
@@ -540,13 +614,62 @@ def init_app(app):
             mimetype='text/csv',
             download_name='devices_full.csv'
         )
+    
+    # Rota para enviar CSV por email
+    @app.route('/send_email_csv', methods=['POST'])
+    def send_email_csv():
+        email = request.form.get('email')
+        report_type = request.form.get('type')
+
+        if not email:
+            flash("O email é obrigatório", "danger")
+            return redirect(url_for('relatorios'))
+
+        if report_type == 'simple':
+            csv_path = generate_csv_simple()
+        elif report_type == 'full':
+            csv_path = generate_csv_full()
+        else:
+            flash('Tipo de relatório inválido.', 'danger')
+            return redirect(url_for('relatorios'))
+
+        try:
+            send_report_email(email, csv_path)
+            flash(f'Relatório {report_type.upper()} enviado para {email}', 'success')
+        except Exception as e:
+            flash(f'Erro ao enviar email: {str(e)}', 'danger')
+
+        return redirect(url_for('reports'))
+
     # Rota para encerrar o servidor Flask (usada para testes com webview)
     @app.route('/shutdown', methods=['POST'])
     @login_required
     def shutdown():
         os.kill(os.getpid(), signal.SIGINT)
         return 'A encerrar o servidor Flask...'
+        
+    # Rotas para tratamento de erros
+    @app.errorhandler(404)
+    def handle_404(e):
+        return render_template("error.html", error=e, network=network, router_ip=gateway), 404
 
+    @app.errorhandler(403)
+    def handle_403(e):
+        return render_template("error.html", error=e, network=network, router_ip=gateway), 403
+
+    @app.errorhandler(500)
+    def handle_500(e):
+        return render_template("error.html", error=e, network=network, router_ip=gateway), 500
+
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        # Se for HTTPException (como 404, etc), deixa o handler específico lidar
+        if isinstance(e, HTTPException):
+            return render_template("error.html", error=e, network=network, router_ip=gateway), e.code
+
+        # Se for erro inesperado (ex: ZeroDivisionError, etc)
+        return render_template("error.html", error=e, network=network, router_ip=gateway), 500
+    
     # Rota para o WebSocket
     @socketio.on('connect')
     def ws_connect():

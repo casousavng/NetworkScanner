@@ -44,17 +44,17 @@
     {% if messages %}
       <div class="mt-4">
         {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            {% if category == 'success' %}
-              <i class="bi bi-check-circle-fill"></i>
-            {% elif category == 'danger' %}
-              <i class="bi bi-x-circle-fill"></i>
-            {% else %}
-              <i class="bi bi-info-circle-fill"></i>
-            {% endif %}
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-          </div>
+          {% if category.startswith('report_') %}
+            <div class="alert alert-{{ 'success' if 'success' in category else 'danger' }} alert-dismissible fade show" role="alert">
+              {% if 'success' in category %}
+                <i class="bi bi-check-circle-fill"></i>
+              {% else %}
+                <i class="bi bi-x-circle-fill"></i>
+              {% endif %}
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            </div>
+          {% endif %}
         {% endfor %}
       </div>
     {% endif %}

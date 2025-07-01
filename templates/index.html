@@ -3,10 +3,14 @@
 
 <div style="position: absolute; bottom: 20px; left: 20px; z-index: 1000;">
   <a href="{{ url_for('about') }}">
-    <img src="{{ url_for('static', filename='img/network_icon.png') }}" title="Sobre o Projeto" alt="Network Icon" style="width: 48px; height: 48px;">
+    <img
+      src="{{ url_for('static', filename='img/network_icon.png') }}"
+      title="Sobre o Projeto"
+      alt="Network Icon"
+      style="width: 48px; height: 48px; animation: pulse-grow 1.2s infinite alternate;"
+    >
   </a>
 </div>
-
 <div class="container mt-4">
   <!-- Título e Legenda -->
   <div style="margin-bottom: 16px;">
@@ -41,10 +45,9 @@
         </div>
       </div>
     </div>
+      <!-- Mapa -->
+    <div id="network-graph" style="height: 800px;"></div>
   </div>
-
-  <!-- Mapa -->
-  <div id="network-graph" style="height: 800px;"></div>
 </div>
 
 <script>
@@ -103,24 +106,44 @@
                       <b>Serviço:</b> ${p.service || '-'} <br>
                       <b>Produto:</b> ${p.product || '-'} <br>
                       <b>Versão:</b> ${p.version || '-'} <br>
-                      ${Array.isArray(p.cves) && p.cves.length ? `
-                      <b>Vulnerabilidades:</b>
-                      <div style="margin-left: 10px;"><b>CVE's:</b></div> 
-                      ${p.cves.map(cve => `
-                        <div style="margin-left: 10px;">
-                        ${cve.id ? `<b><a href="${cve.reference}" target="_blank" rel="noopener noreferrer">${cve.id}</a></b>` : `<b>Sem CVE</b>`}
-                        ${cve.cvss ? `<span style="color: #d9534f;">(CVSS3: ${cve.cvss})</span>` : ''}
+                      ${(Array.isArray(p.cves) && p.cves.length) || (Array.isArray(p.edb) && p.edb.length) ? `
+                        <div style="margin-bottom: 4px;">
+                          <b>Vulnerabilidades:</b> <b style="color:#d9534f;">${(p.cves ? p.cves.length : 0) + (p.edb ? p.edb.length : 0)}</b>
+                          <div style="margin-left: 12px;">
+                            ${Array.isArray(p.cves) && p.cves.length ? `
+                              <div>
+                                <span style="cursor:pointer; color:#222; user-select:none;" class="toggle-cve-edb" data-type="cve">
+                                  <span class="arrow-cve-edb" style="display:inline-block; transition: transform 0.2s;">&#9654;</span>
+                                  CVE (<span style='color:#d9534f;'><b>${p.cves.length}</b></span>)
+                                </span>
+                                <div class="cve-edb-list" style="display:none; margin-left:16px;">
+                                  ${p.cves.map(cve => `
+                                    <div style="color:#222;">
+                                      ${cve.id ? `<a href="${cve.reference}" target="_blank" rel="noopener noreferrer">${cve.id}</a>` : `Sem CVE`}
+                                      ${cve.cvss ? `<span style=\"color: #d9534f;\">(CVSS: <b>${cve.cvss}</b>)</span>` : ''}
+                                    </div>
+                                  `).join('')}
+                                </div>
+                              </div>
+                            ` : ''}
+                            ${Array.isArray(p.edb) && p.edb.length ? `
+                              <div>
+                                <span style="cursor:pointer; color:#222; user-select:none;" class="toggle-cve-edb" data-type="edb">
+                                  <span class="arrow-cve-edb" style="display:inline-block; transition: transform 0.2s;">&#9654;</span>
+                                  EDB (<span style='color:#d9534f;'><b>${p.edb.length}</b></span>)
+                                </span>
+                                <div class="cve-edb-list" style="display:none; margin-left:16px;">
+                                  ${p.edb.map(edb => `
+                                    <div style="color:#222;">
+                                      <a href="${edb.reference}" target="_blank" rel="noopener noreferrer">${edb.id}</a>
+                                      ${edb.severity ? `<span style=\"color: #d9534f;\">(CVSS: <b>${edb.severity}</b>)</span>` : ''}
+                                    </div>
+                                  `).join('')}
+                                </div>
+                              </div>
+                            ` : ''}
+                          </div>
                         </div>
-                      `).join('')}
-                      ` : ''}
-                      ${Array.isArray(p.edb) && p.edb.length ? `
-                      <div style="margin-left: 10px;"><b>Exploit-DB:</b></div> 
-                      ${p.edb.map(edb => `
-                        <div style="margin-left: 10px;">
-                        <b><a href="${edb.reference}" target="_blank" rel="noopener noreferrer">${edb.id}</a></b>
-                        ${edb.severity ? `<span style="color: #d9534f;">(CVSS3: ${edb.severity})</span>` : ''}
-                        </div>
-                      `).join('')}
                       ` : ''}
                     </div>
                     <hr style="border-top: 2px dotted #bbb;">
@@ -133,6 +156,22 @@
         });
     }
   });
+</script>
+
+<script>
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('toggle-cve-edb')) {
+    const list = e.target.nextElementSibling;
+    const arrow = e.target.querySelector('.arrow-cve-edb');
+       if (list) {
+      const isOpen = list.style.display === 'block';
+      list.style.display = isOpen ? 'none' : 'block';
+      if (arrow) {
+        arrow.innerHTML = isOpen ? '\u25B6' : '\u25BC'; // ▶ : ▼
+      }
+    }
+  }
+});
 </script>
 
 {% endblock %}

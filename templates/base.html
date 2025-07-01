@@ -3,6 +3,10 @@
 <head>
   <meta charset="utf-8">
   <title>Scanner de Rede</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="Scanner de Rede - Mapeamento e Análise de Dispositivos">
+  <meta name="author" content="Carlos Sousa">
+  <meta name="keywords" content="rede, scanner, dispositivos, vulnerabilidades, segurança, mapeamento, análise">
   <link rel="stylesheet" href="{{ url_for('static', filename='style/bootstrap.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style/style.css') }}">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -11,7 +15,9 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.5.0/dist/socket.io.min.js"></script>
+
 </head>
+
 <body>
   <div id="app-container">
     <div class="sidebar shadow d-flex flex-column" id="sidebar">
@@ -39,6 +45,11 @@
           <button class="btn btn-outline-primary w-100" id="fullscreenBtn" onclick="toggleFullScreen()">
             <i class="bi bi-arrows-fullscreen"></i> <span class="label">Tela cheia</span>
           </button>
+            <!-- EM DESENVOLVIMENTO
+            <button class="btn btn-outline-dark w-100" id="darkModeBtn" type="button" onclick="toggleDarkMode()" style="display: block !important; z-index: 9999;">
+            <i class="bi bi-moon"></i> <span class="label">Modo escuro</span>
+            </button>
+            -->
         </li>
         <li><hr class="nav-link disabled mt-auto mb-1 network-info collapsible-item"></li>
       </ul>
@@ -50,29 +61,11 @@
         <strong><i class="bi bi-diagram-3"></i> Máscara:</strong> {{ network.netmask }}<br>
         <strong><i class="bi bi-broadcast"></i> Broadcast:</strong> {{ network.broadcast }}
       </span>
-      <span class="nav-link mt-auto mb-1 network-info collapsible-item" style="font-size: 1.1em; cursor: pointer;" id="networkInfoIcon" title="Mostrar informações de rede">
-        <i class="bi bi-diagram-3"></i> Informações de Rede
+      <span class="nav-link mt-auto mb-1 network-info collapsible-item" style="font-size: 0.9em; cursor: pointer;" id="networkInfoIcon" title="Mostrar Informações de Rede">
+        <i class="bi bi-diagram-3"></i> Mostrar Info de Rede
       </span>
-      <script>
-        document.addEventListener("DOMContentLoaded", function () {
-          const icon = document.getElementById('networkInfoIcon');
-          const infoBox = document.getElementById('networkInfoBox');
-          if (icon && infoBox) {
-        icon.addEventListener('mouseenter', () => {
-          infoBox.style.display = 'block';
-        });
-        icon.addEventListener('mouseleave', () => {
-          infoBox.style.display = 'none';
-        });
-        infoBox.addEventListener('mouseenter', () => {
-          infoBox.style.display = 'block';
-        });
-        infoBox.addEventListener('mouseleave', () => {
-          infoBox.style.display = 'none';
-        });
-          }
-        });
-      </script>
+        <span class="nav-link mt-auto mb-1 network-info collapsible-item" id="mini-clock" style="font-size: 12px; font-family: monospace;"></span>
+  
     </div>
 
     <!-- Botão de toggle -->
@@ -184,6 +177,56 @@
         btnFullscreen.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> Sair da tela cheia';
       }
     });
+
+    // Modo escuro -> EM TESTES
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+      if (document.body.classList.contains('dark-mode')) {
+        localStorage.setItem('darkMode', 'true');
+        document.getElementById('darkModeBtn').innerHTML = '<i class="bi bi-brightness-high"></i> <span class="label">Modo claro</span>';
+      } else {
+        localStorage.removeItem('darkMode');
+        document.getElementById('darkModeBtn').innerHTML = '<i class="bi bi-moon"></i> <span class="label">Modo escuro</span>';
+      }
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+      if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('darkModeBtn').innerHTML = '<i class="bi bi-brightness-high"></i> <span class="label">Modo claro</span>';
+      }
+    });
+
+    // Atualiza o relógio mini
+    // Exibe a data e hora atual no formato DD.MM.AAAA HH:MM:
+    function updateMiniClock() {
+      const now = new Date();
+      const pad = n => n.toString().padStart(2, '0');
+      const formatted = `<i class="bi bi-calendar"></i> ${pad(now.getDate())}.${pad(now.getMonth()+1)}.${pad(now.getFullYear())} <i class="bi bi-clock"></i> ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+      document.getElementById('mini-clock').innerHTML = formatted;
+    }
+    updateMiniClock();
+    setInterval(updateMiniClock, 1000);
+ 
+    // Tooltip para a legenda do mapa
+    document.addEventListener("DOMContentLoaded", function () {
+      const icon = document.getElementById('networkInfoIcon');
+      const infoBox = document.getElementById('networkInfoBox');
+      if (icon && infoBox) {
+    icon.addEventListener('mouseenter', () => {
+      infoBox.style.display = 'block';
+    });
+    icon.addEventListener('mouseleave', () => {
+      infoBox.style.display = 'none';
+    });
+    infoBox.addEventListener('mouseenter', () => {
+      infoBox.style.display = 'block';
+    });
+    infoBox.addEventListener('mouseleave', () => {
+      infoBox.style.display = 'none';
+    });
+      }
+    });
+
   </script>
 </body>
 </html>

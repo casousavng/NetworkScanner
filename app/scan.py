@@ -9,6 +9,7 @@ import re
 import netifaces
 import ipaddress
 from .mail import send_scan_start_email, send_scan_completed_email
+from .update_descriptions import update_descriptions
 
 # Função para obter o gateway padrão da máquina
 def get_default_gateway():
@@ -189,7 +190,7 @@ def scan_and_store(active_ips, port_range):
             for match in pattern.finditer(description):
                 cve_id = match.group(1)
                 cvss = match.group(2)
-                desc = "Detectado na descrição da vulnerabilidade"
+                desc = ""  # Sera preenchido com script proprio
                 link = f"https://vulners.com/cve/{cve_id}"
                 cur.execute("""
                     INSERT INTO cves(port_id, cve_id, description, cvss, reference)
@@ -222,6 +223,7 @@ def scan_and_store(active_ips, port_range):
             for match in pattern.finditer(description):
                 edb_id = f"EDB-ID:{match.group(1)}"
                 severity = match.group(2)
+                ebds = "" # será preenchido com script proprio
                 url = match.group(3)
 
                 cur.execute("""
@@ -235,7 +237,7 @@ def scan_and_store(active_ips, port_range):
                     vuln_id,
                     edb_id,
                     severity,
-                    "Detectado na descrição da vulnerabilidade",
+                    ebds,
                     url
                 ))
     
@@ -319,7 +321,7 @@ def scan_and_store(active_ips, port_range):
     extract_cves_from_description()
     extract_ebds_from_description()
     save_scan_stats(scan_id, time.strftime('%Y-%m-%d %H:%M:%S'), active_ips, port_range)
-
+        
     # Atualiza o status do scan
     cur.execute("UPDATE scan_status SET end_time = CURRENT_TIMESTAMP WHERE end_time IS NULL;")
     db.commit()
@@ -341,6 +343,8 @@ def scan_and_store(active_ips, port_range):
 
     cur.execute("UPDATE scans SET duration = ? WHERE id = ?", (duration_str, scan_id))
     db.commit()
+
+    update_descriptions()  # Atualiza descrições de CVEs e EDBs a partir da BD
 
     # Realiza backup da base de dados a cada scan
     print("🔄 Realizando backup da base de dados...")
