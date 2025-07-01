@@ -94,4 +94,35 @@
     </form>
   </div>
 </div>
+
+
+<div id="flash-message" style="
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1055;
+  min-width: 300px;
+  max-width: 90vw;
+">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert" style="box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+      </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+<script>
+  setTimeout(() => {
+    const alert = document.querySelector('#flash-message .alert');
+    if (alert) {
+      bootstrap.Alert.getOrCreateInstance(alert).close();
+    }
+  }, 4000);
+</script>
 {% endblock %}
