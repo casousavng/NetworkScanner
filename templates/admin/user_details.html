@@ -160,8 +160,8 @@
               <div class="border rounded p-2">
                 <small class="text-muted">Dias desde criação</small><br>
                 <strong>
-                  {% if user.created_at %}
-                    {{ (now() - user.created_at).days }}
+                  {% if user.created_at and now %}
+                    {{ (now - user.created_at).days }}
                   {% else %}
                     N/A
                   {% endif %}

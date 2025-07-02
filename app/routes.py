@@ -788,11 +788,14 @@ def init_app(app):
         
         
         user = auth.get_user_by_email(email)
+        now = datetime.utcnow()
 
         if user and user.get('token_expiration'):
-            user['token_expiration'] = datetime.fromisoformat(user['token_expiration'])
+            token_exp = user['token_expiration']
+            if isinstance(token_exp, str):
+                user['token_expiration'] = datetime.fromisoformat(token_exp)
 
-        return render_template('admin/user_details.html', user=user, network=network, router_ip=gateway)    
+        return render_template('admin/user_details.html', user=user, network=network, router_ip=gateway, now=now)    
     
     @app.route('/admin/init-users-db')
     @login_required
