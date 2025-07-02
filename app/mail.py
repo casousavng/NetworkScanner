@@ -315,11 +315,120 @@ Gerado automaticamente em {current_app.config.get('SERVER_NAME', 'localhost')}
             
             <div style="background-color: #ecf0f1; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: center;">
                 <h3 style="color: #e74c3c; margin-bottom: 10px;">SEU TOKEN DE ACESSO:</h3>
-                <div style="font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold; 
+                <div id="tokenContainer" style="font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold; 
                            background-color: #34495e; color: white; padding: 15px; border-radius: 5px; 
-                           letter-spacing: 2px; word-break: break-all;">
+                           letter-spacing: 2px; word-break: break-all; margin-bottom: 15px; position: relative;">
                     {token}
                 </div>
+                <button onclick="copyToken()" id="copyBtn" 
+                        style="background-color: #3498db; color: white; border: none; padding: 10px 20px; 
+                               border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold;
+                               transition: background-color 0.3s; margin-right: 10px;">
+                    📋 Copiar Token
+                </button>
+                <button onclick="selectToken()" 
+                        style="background-color: #2ecc71; color: white; border: none; padding: 10px 20px; 
+                               border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold;
+                               transition: background-color 0.3s;">
+                    ✏️ Selecionar Token
+                </button>
+                <script>
+                    function copyToken() {{
+                        const tokenText = '{token}';
+                        
+                        // Método 1: Clipboard API (navegadores modernos)
+                        if (navigator.clipboard && navigator.clipboard.writeText) {{
+                            navigator.clipboard.writeText(tokenText).then(function() {{
+                                document.getElementById('copyBtn').innerHTML = '✅ Copiado!';
+                                document.getElementById('copyBtn').style.backgroundColor = '#27ae60';
+                                setTimeout(function() {{
+                                    document.getElementById('copyBtn').innerHTML = '📋 Copiar Token';
+                                    document.getElementById('copyBtn').style.backgroundColor = '#3498db';
+                                }}, 2000);
+                            }}).catch(function() {{
+                                fallbackCopy();
+                            }});
+                        }} else {{
+                            fallbackCopy();
+                        }}
+                    }}
+                    
+                    function fallbackCopy() {{
+                        // Método 2: Fallback para clientes de email mais antigos
+                        const textArea = document.createElement('textarea');
+                        textArea.value = '{token}';
+                        textArea.style.position = 'fixed';
+                        textArea.style.opacity = '0';
+                        document.body.appendChild(textArea);
+                        textArea.focus();
+                        textArea.select();
+                        
+                        try {{
+                            const successful = document.execCommand('copy');
+                            if (successful) {{
+                                document.getElementById('copyBtn').innerHTML = '✅ Copiado!';
+                                document.getElementById('copyBtn').style.backgroundColor = '#27ae60';
+                                setTimeout(function() {{
+                                    document.getElementById('copyBtn').innerHTML = '📋 Copiar Token';
+                                    document.getElementById('copyBtn').style.backgroundColor = '#3498db';
+                                }}, 2000);
+                            }} else {{
+                                alert('Token: {token}\\n\\nPor favor, copie manualmente este token.');
+                            }}
+                        }} catch (err) {{
+                            alert('Token: {token}\\n\\nPor favor, copie manualmente este token.');
+                        }}
+                        
+                        document.body.removeChild(textArea);
+                    }}
+                    
+                    function selectToken() {{
+                        const tokenContainer = document.getElementById('tokenContainer');
+                        if (window.getSelection && document.createRange) {{
+                            const range = document.createRange();
+                            range.selectNodeContents(tokenContainer);
+                            const selection = window.getSelection();
+                            selection.removeAllRanges();
+                            selection.addRange(range);
+                        }} else if (document.selection && document.body.createTextRange) {{
+                            const range = document.body.createTextRange();
+                            range.moveToElementText(tokenContainer);
+                            range.select();
+                        }}
+                        
+                        // Feedback visual
+                        tokenContainer.style.backgroundColor = '#e74c3c';
+                        setTimeout(function() {{
+                            tokenContainer.style.backgroundColor = '#34495e';
+                        }}, 1000);
+                    }}
+                    
+                    // Hover effects
+                    document.addEventListener('DOMContentLoaded', function() {{
+                        const copyBtn = document.getElementById('copyBtn');
+                        const selectBtn = document.querySelectorAll('button')[1];
+                        
+                        copyBtn.addEventListener('mouseenter', function() {{
+                            if (this.innerHTML === '📋 Copiar Token') {{
+                                this.style.backgroundColor = '#2980b9';
+                            }}
+                        }});
+                        
+                        copyBtn.addEventListener('mouseleave', function() {{
+                            if (this.innerHTML === '📋 Copiar Token') {{
+                                this.style.backgroundColor = '#3498db';
+                            }}
+                        }});
+                        
+                        selectBtn.addEventListener('mouseenter', function() {{
+                            this.style.backgroundColor = '#27ae60';
+                        }});
+                        
+                        selectBtn.addEventListener('mouseleave', function() {{
+                            this.style.backgroundColor = '#2ecc71';
+                        }});
+                    }});
+                </script>
             </div>
             
             <div style="background-color: #e8f4fd; padding: 15px; border-left: 4px solid #3498db; margin: 20px 0;">
@@ -327,9 +436,18 @@ Gerado automaticamente em {current_app.config.get('SERVER_NAME', 'localhost')}
                 <ol style="color: #34495e; margin: 0;">
                     <li>Aceda à página de login do NetworkScanner</li>
                     <li>Insira o seu <strong>username</strong> e <strong>password</strong></li>
-                    <li>Quando solicitado, insira o token acima no campo "Token de Acesso"</li>
+                    <li>Quando solicitado, insira o token acima no campo "Token de Acesso"
+                        <br><small style="color: #7f8c8d;">💡 <em>Dica: Use os botões "Copiar Token" ou "Selecionar Token" acima para facilitar</em></small>
+                    </li>
                     <li>Clique em "<strong>Fazer Login</strong>"</li>
                 </ol>
+                
+                <noscript>
+                    <div style="background-color: #fff3cd; padding: 10px; border-radius: 5px; margin-top: 15px; border-left: 3px solid #ffc107;">
+                        <strong>⚠️ JavaScript Desativado:</strong><br>
+                        <small>Os botões de copiar não funcionam. Selecione manualmente o token acima e copie-o (Ctrl+C / Cmd+C).</small>
+                    </div>
+                </noscript>
             </div>
             
             <div style="background-color: #fdf2e9; padding: 15px; border-left: 4px solid #f39c12; margin: 20px 0;">

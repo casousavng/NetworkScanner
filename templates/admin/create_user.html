@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h2><i class="bi bi-person-plus"></i> Criar Novo Utilizador</h2>
+        <a href="{{ url_for('manage_users') }}" class="btn btn-outline-secondary">
+          <i class="bi bi-arrow-left"></i> Voltar à Lista
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensagens Flash -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="row mb-3">
+        <div class="col-12">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }} alert-dismissible fade show" role="alert">
+              <i class="bi bi-{{ 'exclamation-triangle-fill' if category == 'danger' else 'check-circle-fill' if category == 'success' else 'exclamation-circle-fill' if category == 'warning' else 'info-circle-fill' }}"></i>
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="bi bi-person-fill-add"></i> Informações do Novo Utilizador</h5>
+        </div>
+        <div class="card-body">
+          <form method="POST" id="createUserForm">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="nome" class="form-label">
+                    <i class="bi bi-person"></i> Nome Completo *
+                  </label>
+                  <input type="text" class="form-control" id="nome" name="nome" required maxlength="100"
+                         placeholder="Ex: João Silva">
+                  <div class="form-text">Nome completo do utilizador</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="email" class="form-label">
+                    <i class="bi bi-envelope"></i> Email *
+                  </label>
+                  <input type="email" class="form-control" id="email" name="email" required maxlength="100"
+                         placeholder="Ex: joao.silva@empresa.com">
+                  <div class="form-text">Email para envio do token de autenticação</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="password" class="form-label">
+                    <i class="bi bi-lock"></i> Senha *
+                  </label>
+                  <div class="input-group">
+                    <input type="password" class="form-control" id="password" name="password" required minlength="6" maxlength="50"
+                           placeholder="Mínimo 6 caracteres">
+                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                      <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                    </button>
+                  </div>
+                  <div class="form-text">Senha de acesso (mínimo 6 caracteres)</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="confirmPassword" class="form-label">
+                    <i class="bi bi-lock-fill"></i> Confirmar Senha *
+                  </label>
+                  <input type="password" class="form-control" id="confirmPassword" required minlength="6" maxlength="50"
+                         placeholder="Repetir a senha">
+                  <div class="form-text">Confirme a senha digitada acima</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="hours" class="form-label">
+                    <i class="bi bi-clock"></i> Validade do Token Inicial
+                  </label>
+                  <select class="form-select" id="hours" name="hours">
+                    <option value="1">1 hora</option>
+                    <option value="6">6 horas</option>
+                    <option value="12">12 horas</option>
+                    <option value="24" selected>24 horas (1 dia)</option>
+                    <option value="72">72 horas (3 dias)</option>
+                    <option value="168">168 horas (1 semana)</option>
+                    <option value="720">720 horas (30 dias)</option>
+                  </select>
+                  <div class="form-text">Duração do primeiro token de acesso</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">
+                    <i class="bi bi-info-circle"></i> Informações Adicionais
+                  </label>
+                  <div class="alert alert-info">
+                    <small>
+                      • O token será enviado por email<br>
+                      • O utilizador ficará ativo automaticamente<br>
+                      • A senha é criptografada com segurança
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <hr>
+
+            <div class="d-flex justify-content-between">
+              <a href="{{ url_for('manage_users') }}" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Cancelar
+              </a>
+              <button type="submit" class="btn btn-primary" id="submitBtn">
+                <i class="bi bi-person-plus"></i> Criar Utilizador
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Informações sobre Segurança -->
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="card border-warning">
+        <div class="card-header bg-warning text-dark">
+          <h6 class="mb-0"><i class="bi bi-shield-lock"></i> Informações de Segurança</h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4">
+              <h6><i class="bi bi-lock"></i> Senhas</h6>
+              <ul class="small text-muted">
+                <li>São criptografadas com bcrypt</li>
+                <li>Mínimo de 6 caracteres</li>
+                <li>Recomenda-se usar senhas fortes</li>
+              </ul>
+            </div>
+            <div class="col-md-4">
+              <h6><i class="bi bi-key"></i> Tokens</h6>
+              <ul class="small text-muted">
+                <li>Gerados aleatoriamente</li>
+                <li>Enviados por email</li>
+                <li>Têm data de expiração</li>
+              </ul>
+            </div>
+            <div class="col-md-4">
+              <h6><i class="bi bi-person-check"></i> Utilizadores</h6>
+              <ul class="small text-muted">
+                <li>Podem ser ativados/desativados</li>
+                <li>Histórico de login registado</li>
+                <li>Tokens podem ser renovados</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('createUserForm');
+  const password = document.getElementById('password');
+  const confirmPassword = document.getElementById('confirmPassword');
+  const toggleButton = document.getElementById('togglePassword');
+  const toggleIcon = document.getElementById('togglePasswordIcon');
+  const submitBtn = document.getElementById('submitBtn');
+
+  // Toggle password visibility
+  toggleButton.addEventListener('click', function() {
+    const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+    password.setAttribute('type', type);
+    confirmPassword.setAttribute('type', type);
+    
+    if (type === 'text') {
+      toggleIcon.classList.remove('bi-eye');
+      toggleIcon.classList.add('bi-eye-slash');
+    } else {
+      toggleIcon.classList.remove('bi-eye-slash');
+      toggleIcon.classList.add('bi-eye');
+    }
+  });
+
+  // Validação de senha
+  function validatePasswords() {
+    const isValid = password.value === confirmPassword.value && password.value.length >= 6;
+    
+    if (confirmPassword.value && password.value !== confirmPassword.value) {
+      confirmPassword.setCustomValidity('As senhas não coincidem');
+      confirmPassword.classList.add('is-invalid');
+    } else {
+      confirmPassword.setCustomValidity('');
+      confirmPassword.classList.remove('is-invalid');
+    }
+    
+    submitBtn.disabled = !isValid;
+    return isValid;
+  }
+
+  password.addEventListener('input', validatePasswords);
+  confirmPassword.addEventListener('input', validatePasswords);
+
+  // Validação do formulário
+  form.addEventListener('submit', function(e) {
+    if (!validatePasswords()) {
+      e.preventDefault();
+      alert('Por favor, verifique se as senhas coincidem e têm pelo menos 6 caracteres.');
+      return false;
+    }
+    
+    // Confirmar criação
+    const nome = document.getElementById('nome').value;
+    const email = document.getElementById('email').value;
+    
+    if (!confirm(`Criar utilizador "${nome}" com email "${email}"?`)) {
+      e.preventDefault();
+      return false;
+    }
+    
+    // Desabilitar botão para evitar duplo clique
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Criando...';
+  });
+
+  // Auto-dismiss das mensagens flash
+  const alerts = document.querySelectorAll('.alert');
+  alerts.forEach(function(alert) {
+    setTimeout(function() {
+      const bsAlert = new bootstrap.Alert(alert);
+      if (bsAlert) {
+        bsAlert.close();
+      }
+    }, 5000);
+  });
+});
+</script>
+{% endblock %}

@@ -14,47 +14,27 @@ gateway = netifaces.gateways()['default'][netifaces.AF_INET][0]
 
 def init_app(app):
     login_manager.init_app(app)
-    login_manager.login_view = 'login'
+    login_manager.login_view = 'login'  # type: ignore
+    login_manager.login_message = '🔒 Por favor, faça login para aceder a esta página.'
+    login_manager.login_message_category = 'info'
 
     @login_manager.user_loader
     def load_user(uid):
-        # Verificar se é o admin do sistema antigo (fallback)
-        if uid == app.config.get("ADMIN_USER", "admin"):
-            return User(uid)
-        
         # Verificar se é um utilizador do novo sistema
         auth = UserAuth()
-        # Assumir que o uid é um user_id ou email
-        try:
-            # Tentar como ID primeiro
-            user_id = int(uid)
-            # Buscar por ID não está implementado, usar email como fallback
-            return User(uid)
-        except ValueError:
-            # É um email, verificar se existe
-            user = auth.get_user_by_email(uid)
-            if user and user['is_active']:
-                return User(user['id'])
+        
+        # Buscar apenas por username
+        user = auth.get_user_by_username(uid)
+        if user and user['is_active']:
+            return User(user['username'])
         
         return None
 
 
     @app.route('/login', methods=['GET','POST'])
     def login():
-        if request.method == 'POST':
-            # Sistema antigo (fallback) - verificar se não tem token
-            if 'token' not in request.form or not request.form['token']:
-                username = request.form.get('username', '')
-                password = request.form.get('password', '')
-                
-                if username == app.config.get("ADMIN_USER", "admin") and password == app.config.get("ADMIN_PASS", "admin"):
-                    user = User(username)
-                    login_user(user)
-                    flash('Login realizado com sucesso!', 'success')
-                    return redirect(url_for('index'))
-                else:
-                    flash('Credenciais inválidas', 'danger')
-        
+        # A página de login apenas renderiza o template
+        # Todo o processamento é feito pelas rotas /request_token e /login_with_token
         return render_template('login.html', network=network, router_ip=gateway)
     
     @app.route('/request_token', methods=['POST'])
@@ -64,7 +44,7 @@ def init_app(app):
         password = request.form.get('password', '')
         
         if not username or not password:
-            flash('Username e password são obrigatórios', 'danger')
+            flash('❌ Username e password são obrigatórios', 'danger')
             return redirect(url_for('login'))
         
         auth = UserAuth()
@@ -83,19 +63,19 @@ def init_app(app):
                 )
                 
                 if email_result['success']:
-                    flash(f'Token enviado para {token_result["email"]}', 'success')
+                    # Não mostrar flash aqui, será mostrado na etapa 2
                     return redirect(url_for('login', step='2', username=username, email=token_result['email']))
                 else:
                     # Se email falhar, mostrar token na tela (modo debug)
                     if email_result.get('debug'):
-                        flash(f'Token gerado (email falhou): {email_result["token"]}', 'warning')
+                        flash(f'⚠️ Email indisponível. Token: {email_result["token"]}', 'warning')
                         return redirect(url_for('login', step='2', username=username, email=token_result['email']))
                     else:
-                        flash(email_result['message'], 'danger')
+                        flash(f'❌ {email_result["message"]}', 'danger')
             else:
-                flash(token_result['message'], 'danger')
+                flash(f'❌ {token_result["message"]}', 'danger')
         else:
-            flash(result['message'], 'danger')
+            flash(f'❌ {result["message"]}', 'danger')
         
         return redirect(url_for('login'))
     
@@ -106,7 +86,7 @@ def init_app(app):
         token = request.form.get('token', '')
         
         if not username or not token:
-            flash('Username e token são obrigatórios', 'danger')
+            flash('❌ Username e token são obrigatórios', 'danger')
             return redirect(url_for('login'))
         
         auth = UserAuth()
@@ -115,10 +95,10 @@ def init_app(app):
         if result['success']:
             user = User(result['username'])
             login_user(user)
-            flash(result['message'], 'success')
+            # Flash de sucesso será exibido na próxima página, não precisa aqui
             return redirect(url_for('index'))
         else:
-            flash(result['message'], 'danger')
+            flash(f'❌ {result["message"]}', 'danger')
             return redirect(url_for('login', step='2', username=username))
 
     @app.route('/logout')
@@ -153,7 +133,8 @@ def init_app(app):
         """Página de gestão de utilizadores"""
         auth = UserAuth()
         users = auth.list_users()
-        return render_template('admin_users.html', users=users, network=network, router_ip=gateway)
+        print(f'Usuários retornados: {users}')  # Para debug no console
+        return render_template('admin/manage_users.html', users=users, network=network, router_ip=gateway)
     
     @app.route('/admin/create_user', methods=['POST'])
     @login_required

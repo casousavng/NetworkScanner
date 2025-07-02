@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h2><i class="bi bi-people-fill"></i> Gestão de Utilizadores</h2>
+        <div>
+          <a href="{{ url_for('create_user') }}" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i> Criar Utilizador
+          </a>
+          <a href="{{ url_for('init_users_db') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-database"></i> Inicializar BD
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensagens Flash -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="row mb-3">
+        <div class="col-12">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }} alert-dismissible fade show" role="alert">
+              <i class="bi bi-{{ 'exclamation-triangle-fill' if category == 'danger' else 'check-circle-fill' if category == 'success' else 'exclamation-circle-fill' if category == 'warning' else 'info-circle-fill' }}"></i>
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Estatísticas -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card border-primary">
+        <div class="card-body text-center">
+          <h5 class="card-title text-primary">
+            <i class="bi bi-people"></i> Total de Utilizadores
+          </h5>
+          <h3 class="text-primary">{{ users|length }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-success">
+        <div class="card-body text-center">
+          <h5 class="card-title text-success">
+            <i class="bi bi-check-circle"></i> Ativos
+          </h5>
+          <h3 class="text-success">{{ users|selectattr('is_active', 'equalto', true)|list|length }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-danger">
+        <div class="card-body text-center">
+          <h5 class="card-title text-danger">
+            <i class="bi bi-x-circle"></i> Inativos
+          </h5>
+          <h3 class="text-danger">{{ users|selectattr('is_active', 'equalto', false)|list|length }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-warning">
+        <div class="card-body text-center">
+          <h5 class="card-title text-warning">
+            <i class="bi bi-clock"></i> Tokens Válidos
+          </h5>
+          <h3 class="text-warning">{{ users|selectattr('token_valid', 'equalto', true)|list|length }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de Utilizadores -->
+  <div class="row">
+    <div class="col-12">
+      {% if users %}
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-list"></i> Lista de Utilizadores</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead class="table-dark">
+                  <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Token</th>
+                    <th>Criado</th>
+                    <th>Último Login</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for user in users %}
+                    <tr>
+                      <td>{{ user.id }}</td>
+                      <td>
+                        <strong>{{ user.nome }}</strong>
+                      </td>
+                      <td>
+                        <i class="bi bi-envelope"></i> {{ user.email }}
+                      </td>
+                      <td>
+                        {% if user.is_active %}
+                          <span class="badge bg-success">
+                            <i class="bi bi-check-circle"></i> Ativo
+                          </span>
+                        {% else %}
+                          <span class="badge bg-danger">
+                            <i class="bi bi-x-circle"></i> Inativo
+                          </span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        {% if user.token_valid %}
+                          <span class="badge bg-success">
+                            <i class="bi bi-shield-check"></i> Válido
+                          </span>
+                        {% else %}
+                          <span class="badge bg-warning">
+                            <i class="bi bi-clock"></i> Expirado
+                          </span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        <small class="text-muted">
+                          <i class="bi bi-calendar"></i> {{ user.created_at.strftime('%d/%m/%Y %H:%M') if user.created_at else 'N/A' }}
+                        </small>
+                      </td>
+                      <td>
+                        <small class="text-muted">
+                          <i class="bi bi-clock-history"></i> {{ user.last_login.strftime('%d/%m/%Y %H:%M') if user.last_login else 'Nunca' }}
+                        </small>
+                      </td>
+                      <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                          <!-- Ver detalhes -->
+                          <a href="{{ url_for('user_details', email=user.email) }}" class="btn btn-outline-info" title="Ver detalhes">
+                            <i class="bi bi-eye"></i>
+                          </a>
+                          
+                          <!-- Renovar token -->
+                          <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#refreshTokenModal" 
+                                  data-email="{{ user.email }}" data-nome="{{ user.nome }}" title="Renovar token">
+                            <i class="bi bi-arrow-clockwise"></i>
+                          </button>
+                          
+                          <!-- Ativar/Desativar -->
+                          {% if user.is_active %}
+                            <form method="POST" action="{{ url_for('deactivate_user', email=user.email) }}" style="display: inline;">
+                              <button type="submit" class="btn btn-outline-danger" 
+                                      onclick="return confirm('Desativar utilizador {{ user.nome }}?')" title="Desativar">
+                                <i class="bi bi-person-x"></i>
+                              </button>
+                            </form>
+                          {% else %}
+                            <form method="POST" action="{{ url_for('activate_user', email=user.email) }}" style="display: inline;">
+                              <button type="submit" class="btn btn-outline-success" 
+                                      onclick="return confirm('Ativar utilizador {{ user.nome }}?')" title="Ativar">
+                                <i class="bi bi-person-check"></i>
+                              </button>
+                            </form>
+                          {% endif %}
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="alert alert-info text-center">
+          <i class="bi bi-info-circle"></i>
+          <h5>Nenhum utilizador encontrado</h5>
+          <p>Comece por criar o primeiro utilizador do sistema.</p>
+          <a href="{{ url_for('create_user') }}" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i> Criar Primeiro Utilizador
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Modal para renovar token -->
+<div class="modal fade" id="refreshTokenModal" tabindex="-1" aria-labelledby="refreshTokenModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="refreshTokenModalLabel">
+          <i class="bi bi-arrow-clockwise"></i> Renovar Token
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <form method="POST" id="refreshTokenForm">
+        <div class="modal-body">
+          <p>Renovar token para o utilizador: <strong id="modalUserName"></strong></p>
+          <div class="mb-3">
+            <label for="tokenHours" class="form-label">Validade do token (horas)</label>
+            <select class="form-select" name="hours" id="tokenHours">
+              <option value="1">1 hora</option>
+              <option value="6">6 horas</option>
+              <option value="12">12 horas</option>
+              <option value="24" selected>24 horas (1 dia)</option>
+              <option value="72">72 horas (3 dias)</option>
+              <option value="168">168 horas (1 semana)</option>
+              <option value="720">720 horas (30 dias)</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-warning">
+            <i class="bi bi-arrow-clockwise"></i> Renovar Token
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// Configurar modal de renovação de token
+document.getElementById('refreshTokenModal').addEventListener('show.bs.modal', function (event) {
+  const button = event.relatedTarget;
+  const email = button.getAttribute('data-email');
+  const nome = button.getAttribute('data-nome');
+  
+  document.getElementById('modalUserName').textContent = nome;
+  document.getElementById('refreshTokenForm').action = `/admin/users/${encodeURIComponent(email)}/refresh`;
+});
+
+// Auto-dismiss das mensagens flash após 5 segundos
+document.addEventListener('DOMContentLoaded', function() {
+  const alerts = document.querySelectorAll('.alert');
+  alerts.forEach(function(alert) {
+    setTimeout(function() {
+      const bsAlert = new bootstrap.Alert(alert);
+      if (bsAlert) {
+        bsAlert.close();
+      }
+    }, 5000);
+  });
+});
+</script>
+{% endblock %}

@@ -45,6 +45,7 @@ def create_user(auth, nome, email, password, hours=24):
     """Criar um novo utilizador"""
     print(f"👤 Criando utilizador: {nome} ({email})")
     
+    print(f"Tipo de password: {type(password)} - Valor: {password}")
     result = auth.create_user(nome, email, password, hours)
     
     if result['success']:

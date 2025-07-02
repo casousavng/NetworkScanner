@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h2><i class="bi bi-person-circle"></i> Detalhes do Utilizador</h2>
+        <a href="{{ url_for('manage_users') }}" class="btn btn-outline-secondary">
+          <i class="bi bi-arrow-left"></i> Voltar à Lista
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensagens Flash -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="row mb-3">
+        <div class="col-12">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }} alert-dismissible fade show" role="alert">
+              <i class="bi bi-{{ 'exclamation-triangle-fill' if category == 'danger' else 'check-circle-fill' if category == 'success' else 'exclamation-circle-fill' if category == 'warning' else 'info-circle-fill' }}"></i>
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="row">
+    <!-- Informações Básicas -->
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="bi bi-person-fill"></i> Informações Pessoais</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <h6><i class="bi bi-hash"></i> ID do Utilizador</h6>
+              <p class="text-muted">{{ user.id }}</p>
+              
+              <h6><i class="bi bi-person"></i> Nome Completo</h6>
+              <p><strong>{{ user.nome }}</strong></p>
+              
+              <h6><i class="bi bi-envelope"></i> Email</h6>
+              <p>{{ user.email }}</p>
+            </div>
+            <div class="col-md-6">
+              <h6><i class="bi bi-calendar"></i> Data de Criação</h6>
+              <p class="text-muted">{{ user.created_at.strftime('%d/%m/%Y às %H:%M') if user.created_at else 'N/A' }}</p>
+              
+              <h6><i class="bi bi-clock-history"></i> Último Login</h6>
+              <p class="text-muted">{{ user.last_login.strftime('%d/%m/%Y às %H:%M') if user.last_login else 'Nunca fez login' }}</p>
+              
+              <h6><i class="bi bi-shield-check"></i> Status da Conta</h6>
+              {% if user.is_active %}
+                <span class="badge bg-success fs-6">
+                  <i class="bi bi-check-circle"></i> Conta Ativa
+                </span>
+              {% else %}
+                <span class="badge bg-danger fs-6">
+                  <i class="bi bi-x-circle"></i> Conta Inativa
+                </span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Informações do Token -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="bi bi-key-fill"></i> Informações do Token</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-8">
+              <h6><i class="bi bi-code"></i> Token Atual</h6>
+              {% if user.token %}
+                <div class="input-group mb-3">
+                  <input type="text" class="form-control font-monospace" id="tokenValue" value="{{ user.token }}" readonly>
+                  <button class="btn btn-outline-secondary" type="button" onclick="copyToken()">
+                    <i class="bi bi-clipboard"></i> Copiar
+                  </button>
+                </div>
+              {% else %}
+                <p class="text-muted">Nenhum token gerado</p>
+              {% endif %}
+              
+              <h6><i class="bi bi-clock"></i> Status do Token</h6>
+              {% if user.token_valid %}
+                <span class="badge bg-success fs-6">
+                  <i class="bi bi-shield-check"></i> Token Válido
+                </span>
+                <p class="text-muted mt-2">
+                  Expira em: {{ user.token_expiration.strftime('%d/%m/%Y às %H:%M') if user.token_expiration else 'N/A' }}
+                </p>
+              {% else %}
+                <span class="badge bg-warning fs-6">
+                  <i class="bi bi-clock"></i> Token Expirado
+                </span>
+                {% if user.token_expiration %}
+                  <p class="text-muted mt-2">
+                    Expirou em: {{ user.token_expiration.strftime('%d/%m/%Y às %H:%M') }}
+                  </p>
+                {% endif %}
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ações -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="bi bi-tools"></i> Ações</h5>
+        </div>
+        <div class="card-body">
+          
+          <!-- Renovar Token -->
+          <div class="d-grid gap-2 mb-3">
+            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#refreshTokenModal">
+              <i class="bi bi-arrow-clockwise"></i> Renovar Token
+            </button>
+          </div>
+
+          <!-- Ativar/Desativar -->
+          <div class="d-grid gap-2 mb-3">
+            {% if user.is_active %}
+              <form method="POST" action="{{ url_for('deactivate_user', email=user.email) }}">
+                <button type="submit" class="btn btn-danger w-100" 
+                        onclick="return confirm('Desativar conta de {{ user.nome }}?')">
+                  <i class="bi bi-person-x"></i> Desativar Conta
+                </button>
+              </form>
+            {% else %}
+              <form method="POST" action="{{ url_for('activate_user', email=user.email) }}">
+                <button type="submit" class="btn btn-success w-100" 
+                        onclick="return confirm('Ativar conta de {{ user.nome }}?')">
+                  <i class="bi bi-person-check"></i> Ativar Conta
+                </button>
+              </form>
+            {% endif %}
+          </div>
+
+          <hr>
+
+          <!-- Estatísticas Rápidas -->
+          <h6><i class="bi bi-graph-up"></i> Estatísticas</h6>
+          <div class="row text-center">
+            <div class="col-12 mb-2">
+              <div class="border rounded p-2">
+                <small class="text-muted">Dias desde criação</small><br>
+                <strong>
+                  {% if user.created_at %}
+                    {{ (now() - user.created_at).days }}
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </strong>
+              </div>
+            </div>
+          </div>
+
+          <hr>
+
+          <!-- Links Rápidos -->
+          <h6><i class="bi bi-link-45deg"></i> Links Rápidos</h6>
+          <div class="d-grid gap-2">
+            <a href="{{ url_for('manage_users') }}" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-people"></i> Todos os Utilizadores
+            </a>
+            <a href="{{ url_for('create_user') }}" class="btn btn-outline-success btn-sm">
+              <i class="bi bi-person-plus"></i> Criar Novo Utilizador
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para renovar token -->
+<div class="modal fade" id="refreshTokenModal" tabindex="-1" aria-labelledby="refreshTokenModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="refreshTokenModalLabel">
+          <i class="bi bi-arrow-clockwise"></i> Renovar Token
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <form method="POST" action="{{ url_for('refresh_user_token', email=user.email) }}">
+        <div class="modal-body">
+          <p>Renovar token para: <strong>{{ user.nome }}</strong> ({{ user.email }})</p>
+          
+          {% if user.token_valid %}
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle"></i>
+              <small>O token atual ainda está válido e será substituído.</small>
+            </div>
+          {% endif %}
+          
+          <div class="mb-3">
+            <label for="tokenHours" class="form-label">Validade do novo token</label>
+            <select class="form-select" name="hours" id="tokenHours">
+              <option value="1">1 hora</option>
+              <option value="6">6 horas</option>
+              <option value="12">12 horas</option>
+              <option value="24" selected>24 horas (1 dia)</option>
+              <option value="72">72 horas (3 dias)</option>
+              <option value="168">168 horas (1 semana)</option>
+              <option value="720">720 horas (30 dias)</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-warning">
+            <i class="bi bi-arrow-clockwise"></i> Renovar Token
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function copyToken() {
+  const tokenInput = document.getElementById('tokenValue');
+  tokenInput.select();
+  tokenInput.setSelectionRange(0, 99999); // Para dispositivos móveis
+  
+  try {
+    document.execCommand('copy');
+    
+    // Feedback visual
+    const btn = event.target.closest('button');
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check"></i> Copiado!';
+    btn.classList.remove('btn-outline-secondary');
+    btn.classList.add('btn-success');
+    
+    setTimeout(() => {
+      btn.innerHTML = originalContent;
+      btn.classList.remove('btn-success');
+      btn.classList.add('btn-outline-secondary');
+    }, 2000);
+  } catch (err) {
+    alert('Erro ao copiar token. Selecione e copie manualmente.');
+  }
+}
+
+// Auto-dismiss das mensagens flash
+document.addEventListener('DOMContentLoaded', function() {
+  const alerts = document.querySelectorAll('.alert');
+  alerts.forEach(function(alert) {
+    setTimeout(function() {
+      const bsAlert = new bootstrap.Alert(alert);
+      if (bsAlert) {
+        bsAlert.close();
+      }
+    }, 5000);
+  });
+});
+</script>
+{% endblock %}

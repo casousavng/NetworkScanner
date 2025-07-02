@@ -173,6 +173,10 @@ def list_users(db_path):
     ''')
     
     users = cursor.fetchall()
+    for user in users:
+        created_at_str = user['created_at']  # ou user[created_at_index] se for tupla
+        if created_at_str:
+            user['created_at'] = datetime.strptime(created_at_str, '%Y-%m-%d %H:%M:%S')
     conn.close()
     
     if not users:

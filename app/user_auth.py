@@ -49,12 +49,6 @@ class UserAuth:
             )
         ''')
         
-        # Adicionar coluna username se não existir (para compatibilidade com BD existente)
-        try:
-            cursor.execute('ALTER TABLE users ADD COLUMN username TEXT UNIQUE')
-        except sqlite3.OperationalError:
-            pass  # Coluna já existe
-        
         conn.commit()
         conn.close()
     
@@ -71,7 +65,9 @@ class UserAuth:
         return secrets.token_urlsafe(32)
     
     def create_user(self, username, nome, email, password, token_validity_hours=24):
-        """Cria um novo utilizador"""
+        if not isinstance(password, str):
+            password = str(password)
+
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
@@ -254,6 +250,7 @@ class UserAuth:
     def list_users(self):
         """Lista todos os utilizadores"""
         conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row  # <-- aqui, faz o cursor devolver dicts
         cursor = conn.cursor()
         
         try:
@@ -262,19 +259,34 @@ class UserAuth:
                 FROM users ORDER BY id
             ''')
             
-            users = cursor.fetchall()
+            users = cursor.fetchall()  # agora users é lista de sqlite3.Row (parecido com dict)
+            
             result = []
             
             for user in users:
-                user_id, nome, email, created_at, last_login, is_active, token_exp = user
+                created_at = user['created_at']
+                if created_at:
+                    # created_at pode ser string, converte para datetime
+                    created_at = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S')
+                
+                last_login = user['last_login']
+                if last_login:
+                    last_login = datetime.strptime(last_login, '%Y-%m-%d %H:%M:%S')
+                
+                token_exp = user['token_expiration']
+                
+                token_valid = False
+                if token_exp:
+                    token_valid = datetime.now() < datetime.fromisoformat(token_exp)
+                
                 result.append({
-                    "id": user_id,
-                    "nome": nome,
-                    "email": email,
+                    "id": user['id'],
+                    "nome": user['nome'],
+                    "email": user['email'],
                     "created_at": created_at,
                     "last_login": last_login,
-                    "is_active": bool(is_active),
-                    "token_valid": datetime.now() < datetime.fromisoformat(token_exp) if token_exp else False
+                    "is_active": bool(user['is_active']),
+                    "token_valid": token_valid
                 })
             
             return result

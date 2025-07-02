@@ -8,6 +8,7 @@ import ipaddress
 import netifaces
 import markdown2
 import re
+from datetime import datetime, timedelta
 
 from flask import (
     render_template,
@@ -649,7 +650,7 @@ def init_app(app):
         return 'A encerrar o servidor Flask...'
         
     # Rotas para tratamento de erros
-    @app.errorhandler(404)
+    #@app.errorhandler(404)
     def handle_404(e):
         print("Erro interno:", e) 
         return render_template("error.html", error=e, network=network, router_ip=gateway), 404
@@ -659,12 +660,12 @@ def init_app(app):
         print("Erro interno:", e) 
         return render_template("error.html", error=e, network=network, router_ip=gateway), 403
 
-    @app.errorhandler(500)
+    #@app.errorhandler(500)
     def handle_500(e):
         print("Erro interno:", e) 
         return render_template("error.html", error=e, network=network, router_ip=gateway), 500
 
-    @app.errorhandler(Exception)
+    #@app.errorhandler(Exception)
     def handle_exception(e):
         # Se for HTTPException (como 404, etc), deixa o handler específico lidar
         print("Erro interno:", e) # Log do erro para debug
@@ -678,4 +679,130 @@ def init_app(app):
     @socketio.on('connect')
     def ws_connect():
         print("WS client conectado")
+
+    # ===== GESTÃO DE UTILIZADORES =====
+
+    @app.route('/configuration')
+    @login_required
+    def configuration():
+        """Painel de administração"""
+        return render_template('configuration.html', network=network, router_ip=gateway)
+    
+    @app.route('/admin/users')
+    @login_required
+    def manage_users():
+        """Página de gestão de utilizadores"""
+        from .user_auth import UserAuth
+        auth = UserAuth()
+        users = auth.list_users()
+        return render_template('admin/manage_users.html', users=users, network=network, router_ip=gateway)
+    
+    @app.route('/admin/users/create', methods=['GET', 'POST'])
+    @login_required
+    def create_user():
+        """Criar novo utilizador"""
+        if request.method == 'POST':
+            from .user_auth import UserAuth
+            auth = UserAuth()
+            
+            nome = request.form.get('nome', '').strip()
+            email = request.form.get('email', '').strip()
+            password = request.form.get('password', '').strip()
+            hours = int(request.form.get('hours', 24))
+            
+            if not nome or not email or not password:
+                flash('Todos os campos são obrigatórios.', 'danger')
+                return render_template('admin/create_user.html', network=network, router_ip=gateway)
+            
+            result = auth.create_user(nome, email, password, hours)
+            
+            if result['success']:
+                flash(f"Utilizador criado com sucesso! Token: {result['token']}", 'success')
+                return redirect(url_for('manage_users'))
+            else:
+                flash(result['message'], 'danger')
+        
+        return render_template('admin/create_user.html', network=network, router_ip=gateway)
+    
+    @app.route('/admin/users/<email>/refresh', methods=['POST'])
+    @login_required
+    def refresh_user_token(email):
+        """Renovar token de utilizador"""
+        from .user_auth import UserAuth
+        auth = UserAuth()
+        
+        hours = int(request.form.get('hours', 24))
+        result = auth.refresh_token(email, hours)
+        
+        if result['success']:
+            flash(f"Token renovado! Novo token: {result['token']}", 'success')
+        else:
+            flash(result['message'], 'danger')
+        
+        return redirect(url_for('manage_users'))
+    
+    @app.route('/admin/users/<email>/deactivate', methods=['POST'])
+    @login_required
+    def deactivate_user(email):
+        """Desativar utilizador"""
+        from .user_auth import UserAuth
+        auth = UserAuth()
+        
+        result = auth.deactivate_user(email)
+        
+        if result['success']:
+            flash(result['message'], 'success')
+        else:
+            flash(result['message'], 'danger')
+        
+        return redirect(url_for('manage_users'))
+    
+    @app.route('/admin/users/<email>/activate', methods=['POST'])
+    @login_required
+    def activate_user(email):
+        """Ativar utilizador"""
+        from .user_auth import UserAuth
+        auth = UserAuth()
+        
+        result = auth.activate_user(email)
+        
+        if result['success']:
+            flash(result['message'], 'success')
+        else:
+            flash(result['message'], 'danger')
+        
+        return redirect(url_for('manage_users'))
+    
+    @app.route('/admin/users/<email>')
+    @login_required
+    def user_details(email):
+        """Detalhes de um utilizador específico"""
+        from .user_auth import UserAuth
+        auth = UserAuth()
+        
+        user = auth.get_user_by_email(email)
+        if not user:
+            flash('Utilizador não encontrado.', 'danger')
+            return redirect(url_for('manage_users'))
+        
+        
+        user = auth.get_user_by_email(email)
+
+        if user and user.get('token_expiration'):
+            user['token_expiration'] = datetime.fromisoformat(user['token_expiration'])
+
+        return render_template('admin/user_details.html', user=user, network=network, router_ip=gateway)    
+    
+    @app.route('/admin/init-users-db')
+    @login_required
+    def init_users_db():
+        """Inicializar base de dados de utilizadores"""
+        from .user_auth import UserAuth
+        try:
+            auth = UserAuth()
+            flash('Base de dados de utilizadores inicializada com sucesso!', 'success')
+        except Exception as e:
+            flash(f'Erro ao inicializar base de dados: {str(e)}', 'danger')
+        
+        return redirect(url_for('manage_users'))
 

@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% block body %}
+<div style="max-height: 100%; overflow-y: auto;">
+  <div class="container-fluid">
+    <div class="row mb-4">
+      <div class="col-12">
+        <h2><i class="bi bi-gear-fill"></i> Configurações do Sistema</h2>
+        <p class="text-muted">Gerir utilizadores, permissões e configurações avançadas do NetworkScanner</p>
+      </div>
+    </div>
+
+    <!-- Mensagens Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="row mb-3">
+          <div class="col-12">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }} alert-dismissible fade show" role="alert">
+                <i class="bi bi-{{ 'exclamation-triangle-fill' if category == 'danger' else 'check-circle-fill' if category == 'success' else 'exclamation-circle-fill' if category == 'warning' else 'info-circle-fill' }}"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Gestão de Utilizadores -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card border-primary">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+              <i class="bi bi-people-fill"></i> Gestão de Utilizadores
+            </h5>
+          </div>
+          <div class="card-body">
+            <p class="card-text">Gerir contas de utilizador, tokens de acesso e permissões do sistema.</p>
+            
+            <div class="row">
+              <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100 border-info">
+                  <div class="card-body text-center">
+                    <i class="bi bi-people display-4 text-info mb-3"></i>
+                    <h6 class="card-title">Ver Utilizadores</h6>
+                    <p class="card-text small">Lista todos os utilizadores registados no sistema</p>
+                    <a href="{{ url_for('manage_users') }}" class="btn btn-info">
+                      <i class="bi bi-list"></i> Ver Lista
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100 border-success">
+                  <div class="card-body text-center">
+                    <i class="bi bi-person-plus display-4 text-success mb-3"></i>
+                    <h6 class="card-title">Criar Utilizador</h6>
+                    <p class="card-text small">Adicionar novo utilizador ao sistema</p>
+                    <a href="{{ url_for('create_user') }}" class="btn btn-success">
+                      <i class="bi bi-person-plus"></i> Criar Novo
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100 border-warning">
+                  <div class="card-body text-center">
+                    <i class="bi bi-database display-4 text-warning mb-3"></i>
+                    <h6 class="card-title">Inicializar BD</h6>
+                    <p class="card-text small">Configurar base de dados de utilizadores</p>
+                    <a href="{{ url_for('init_users_db') }}" class="btn btn-warning" 
+                       onclick="return confirm('Inicializar base de dados de utilizadores?')">
+                      <i class="bi bi-database"></i> Inicializar
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Configurações do Sistema -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card border-secondary">
+          <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">
+              <i class="bi bi-gear"></i> Configurações do Sistema
+            </h5>
+          </div>
+          <div class="card-body">
+            <p class="card-text">Configurações avançadas e parâmetros do sistema.</p>
+            
+            <div class="row">
+              <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100 border-info">
+                  <div class="card-body text-center">
+                    <i class="bi bi-network-wired display-4 text-info mb-3"></i>
+                    <h6 class="card-title">Configurações de Rede</h6>
+                    <p class="card-text small">Configurar parâmetros de scan e rede</p>
+                    <button class="btn btn-info" disabled>
+                      <i class="bi bi-tools"></i> Em Breve
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100 border-dark">
+                  <div class="card-body text-center">
+                    <i class="bi bi-envelope display-4 text-dark mb-3"></i>
+                    <h6 class="card-title">Configurações de Email</h6>
+                    <p class="card-text small">Configurar servidor SMTP e templates</p>
+                    <button class="btn btn-dark" disabled>
+                      <i class="bi bi-tools"></i> Em Breve
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100 border-danger">
+                  <div class="card-body text-center">
+                    <i class="bi bi-shield-lock display-4 text-danger mb-3"></i>
+                    <h6 class="card-title">Configurações de Segurança</h6>
+                    <p class="card-text small">Políticas de senha e autenticação</p>
+                    <button class="btn btn-danger" disabled>
+                      <i class="bi bi-tools"></i> Em Breve
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Informações do Sistema -->
+    <div class="row mb-4">
+      <div class="col-lg-6">
+        <div class="card border-info">
+          <div class="card-header bg-info text-white">
+            <h6 class="mb-0">
+              <i class="bi bi-info-circle"></i> Informações do Sistema
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-6">
+                <h6>Rede Local:</h6>
+                <p class="text-muted small">{{ network.addr }}/{{ network.netmask }}</p>
+                
+                <h6>Gateway:</h6>
+                <p class="text-muted small">{{ router_ip }}</p>
+              </div>
+              <div class="col-6">
+                <h6>Aplicação:</h6>
+                <p class="text-muted small">NetworkScanner v2.0</p>
+                
+                <h6>Status:</h6>
+                <span class="badge bg-success">Online</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card border-warning">
+          <div class="card-header bg-warning text-dark">
+            <h6 class="mb-0">
+              <i class="bi bi-exclamation-triangle"></i> Avisos Importantes
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-warning mb-2" role="alert">
+              <small>
+                <i class="bi bi-shield-lock"></i>
+                <strong>Segurança:</strong> Apenas utilizadores autorizados devem ter acesso a estas configurações.
+              </small>
+            </div>
+            <div class="alert alert-info mb-0" role="alert">
+              <small>
+                <i class="bi bi-database"></i>
+                <strong>Backup:</strong> Recomenda-se fazer backup da base de dados regularmente.
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">
+              <i class="bi bi-lightning"></i> Ações Rápidas
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="d-flex flex-wrap gap-2">
+              <a href="{{ url_for('manage_users') }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-people"></i> Gerir Utilizadores
+              </a>
+              <a href="{{ url_for('create_user') }}" class="btn btn-outline-success btn-sm">
+                <i class="bi bi-person-plus"></i> Novo Utilizador
+              </a>
+              <a href="{{ url_for('index') }}" class="btn btn-outline-info btn-sm">
+                <i class="bi bi-house"></i> Voltar ao Início
+              </a>
+              <a href="{{ url_for('reports') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-file-text"></i> Relatórios
+              </a>
+              <a href="{{ url_for('help') }}" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-question-circle"></i> Ajuda
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Auto-dismiss das mensagens flash
+document.addEventListener('DOMContentLoaded', function() {
+  const alerts = document.querySelectorAll('.alert');
+  alerts.forEach(function(alert) {
+    setTimeout(function() {
+      const bsAlert = new bootstrap.Alert(alert);
+      if (bsAlert) {
+        bsAlert.close();
+      }
+    }, 5000);
+  });
+});
+</script>
+{% endblock %}
