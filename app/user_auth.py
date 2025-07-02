@@ -48,29 +48,9 @@ class UserAuth:
                 is_active BOOLEAN DEFAULT 1
             )
         ''')
+        conn.commit()
+        conn.close()
 
-        # # Adicionar utilizador admin se não existir para teste
-        # cursor.execute("SELECT id FROM users WHERE username = ?", ("admin",))
-        # if not cursor.fetchone():
-        #     admin_password = self.hash_password("admin123")
-        #     admin_token = self.generate_token()
-        #     admin_token_expiration = datetime.now() + timedelta(days=365)
-        #     cursor.execute('''
-        #         INSERT INTO users (username, nome, email, password_hash, token, token_expiration, is_active)
-        #         VALUES (?, ?, ?, ?, ?, ?, ?)
-        #     ''', (
-        #         "admin",
-        #         "Administrador",
-        #         "admin@localhost",
-        #         admin_password,
-        #         admin_token,
-        #         admin_token_expiration,
-        #         1
-        #     ))
-        
-        # conn.commit()
-        # conn.close()
-    
     def hash_password(self, password):
         """Codifica a password usando bcrypt"""
         return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
