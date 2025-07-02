@@ -48,9 +48,28 @@ class UserAuth:
                 is_active BOOLEAN DEFAULT 1
             )
         ''')
+
+        # # Adicionar utilizador admin se não existir para teste
+        # cursor.execute("SELECT id FROM users WHERE username = ?", ("admin",))
+        # if not cursor.fetchone():
+        #     admin_password = self.hash_password("admin123")
+        #     admin_token = self.generate_token()
+        #     admin_token_expiration = datetime.now() + timedelta(days=365)
+        #     cursor.execute('''
+        #         INSERT INTO users (username, nome, email, password_hash, token, token_expiration, is_active)
+        #         VALUES (?, ?, ?, ?, ?, ?, ?)
+        #     ''', (
+        #         "admin",
+        #         "Administrador",
+        #         "admin@localhost",
+        #         admin_password,
+        #         admin_token,
+        #         admin_token_expiration,
+        #         1
+        #     ))
         
-        conn.commit()
-        conn.close()
+        # conn.commit()
+        # conn.close()
     
     def hash_password(self, password):
         """Codifica a password usando bcrypt"""
@@ -172,20 +191,23 @@ class UserAuth:
         
         try:
             cursor.execute('''
-                SELECT id, nome, email, token, token_expiration, is_active
+                SELECT id, username, nome, email, token, token_expiration, is_active, created_at, last_login
                 FROM users WHERE email = ?
             ''', (email,))
             
             user = cursor.fetchone()
             
             if user:
-                user_id, nome, email, token, token_expiration, is_active = user
+                user_id, username, nome, email, token, token_expiration, is_active, created_at, last_login = user
                 return {
                     "id": user_id,
+                    "username": username,
                     "nome": nome,
                     "email": email,
                     "token": token,
-                    "token_expiration": token_expiration,
+                    "token_expiration": datetime.fromisoformat(token_expiration) if token_expiration else None,
+                    "created_at": datetime.fromisoformat(created_at) if created_at else None,
+                    "last_login": datetime.fromisoformat(last_login) if last_login else None,
                     "is_active": bool(is_active),
                     "token_valid": datetime.now() < datetime.fromisoformat(token_expiration) if token_expiration else False
                 }
@@ -247,6 +269,33 @@ class UserAuth:
         finally:
             conn.close()
     
+    def activate_user(self, email):
+        """Ativa um utilizador"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            # Verificar se o utilizador existe
+            cursor.execute("SELECT id, nome, is_active FROM users WHERE email = ?", (email,))
+            user = cursor.fetchone()
+            
+            if not user:
+                return {"success": False, "message": "Utilizador não encontrado."}
+            
+            if user[2]:  # is_active
+                return {"success": False, "message": "Utilizador já está ativo."}
+            
+            # Ativar utilizador
+            cursor.execute("UPDATE users SET is_active = 1 WHERE email = ?", (email,))
+            conn.commit()
+            
+            return {"success": True, "message": f"Utilizador {user[1]} foi ativado com sucesso."}
+            
+        except Exception as e:
+            return {"success": False, "message": f"Erro ao ativar utilizador: {str(e)}"}
+        finally:
+            conn.close()
+    
     def list_users(self):
         """Lista todos os utilizadores"""
         conn = sqlite3.connect(self.db_path)
@@ -255,7 +304,7 @@ class UserAuth:
         
         try:
             cursor.execute('''
-                SELECT id, nome, email, created_at, last_login, is_active, token_expiration
+                SELECT id, username, nome, email, created_at, last_login, is_active, token_expiration
                 FROM users ORDER BY id
             ''')
             

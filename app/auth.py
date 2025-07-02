@@ -140,17 +140,18 @@ def init_app(app):
     @login_required
     def admin_create_user():
         """Criar novo utilizador"""
+        username = request.form.get('username', '')
         nome = request.form.get('nome', '')
         email = request.form.get('email', '')
         password = request.form.get('password', '')
         hours = int(request.form.get('hours', 24))
         
-        if not nome or not email or not password:
+        if not username or not nome or not email or not password:
             flash('Todos os campos são obrigatórios', 'danger')
             return redirect(url_for('admin_users'))
         
         auth = UserAuth()
-        result = auth.create_user(nome, email, password, hours)
+        result = auth.create_user(username, nome, email, password, hours)
         
         if result['success']:
             flash(f'Utilizador criado! Token: {result["token"]}', 'success')

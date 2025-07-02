@@ -40,6 +40,16 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="mb-3">
+                  <label for="username" class="form-label">
+                    <i class="bi bi-person-circle"></i> Username *
+                  </label>
+                  <input type="text" class="form-control" id="username" name="username" required maxlength="50"
+                         placeholder="Ex: joaosilva" pattern="[a-zA-Z0-9_]+" title="Apenas letras, números e underscore">
+                  <div class="form-text">Username único para login (sem espaços ou caracteres especiais)</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
                   <label for="nome" class="form-label">
                     <i class="bi bi-person"></i> Nome Completo *
                   </label>
@@ -48,7 +58,10 @@
                   <div class="form-text">Nome completo do utilizador</div>
                 </div>
               </div>
-              <div class="col-md-6">
+            </div>
+
+            <div class="row">
+              <div class="col-md-12">
                 <div class="mb-3">
                   <label for="email" class="form-label">
                     <i class="bi bi-envelope"></i> Email *
@@ -230,10 +243,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Confirmar criação
+    const username = document.getElementById('username').value;
     const nome = document.getElementById('nome').value;
     const email = document.getElementById('email').value;
     
-    if (!confirm(`Criar utilizador "${nome}" com email "${email}"?`)) {
+    if (!confirm(`Criar utilizador "${nome}" (${username}) com email "${email}"?`)) {
       e.preventDefault();
       return false;
     }

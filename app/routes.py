@@ -705,16 +705,17 @@ def init_app(app):
             from .user_auth import UserAuth
             auth = UserAuth()
             
+            username = request.form.get('username', '').strip()
             nome = request.form.get('nome', '').strip()
             email = request.form.get('email', '').strip()
             password = request.form.get('password', '').strip()
             hours = int(request.form.get('hours', 24))
             
-            if not nome or not email or not password:
+            if not username or not nome or not email or not password:
                 flash('Todos os campos são obrigatórios.', 'danger')
                 return render_template('admin/create_user.html', network=network, router_ip=gateway)
             
-            result = auth.create_user(nome, email, password, hours)
+            result = auth.create_user(username, nome, email, password, hours)
             
             if result['success']:
                 flash(f"Utilizador criado com sucesso! Token: {result['token']}", 'success')

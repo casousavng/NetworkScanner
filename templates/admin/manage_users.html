@@ -92,6 +92,7 @@
                 <thead class="table-dark">
                   <tr>
                     <th>ID</th>
+                    <th>Username</th>
                     <th>Nome</th>
                     <th>Email</th>
                     <th>Status</th>
@@ -105,6 +106,9 @@
                   {% for user in users %}
                     <tr>
                       <td>{{ user.id }}</td>
+                      <td>
+                        <code class="text-primary">{{ user.username }}</code>
+                      </td>
                       <td>
                         <strong>{{ user.nome }}</strong>
                       </td>
