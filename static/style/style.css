@@ -22,6 +22,12 @@ body {
   position: relative; /* Necessário para posicionar o botão de toggle */
 }
 
+.scroll_create_user {
+  width: 100vw;
+  overflow-y: auto !important; /* Permite scroll vertical */
+  height: calc(100vh - 60px); /* Ajusta a altura para não cobrir o footer */
+}
+
 /* === Sidebar === */
 .sidebar {
   background: #fff;
